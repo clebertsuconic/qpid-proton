@@ -45,20 +45,6 @@ public class MessageImpl implements ProtonJMessage
     private Footer _footer;
     private MessageFormat _format = MessageFormat.DATA;
     
-    private static class EncoderDecoderPair {
-      DecoderImpl decoder = new DecoderImpl();
-      EncoderImpl encoder = new EncoderImpl(decoder);
-      {
-          AMQPDefinedTypes.registerAllTypes(decoder, encoder);
-      }
-    }
-
-    private static final ThreadLocal<EncoderDecoderPair> tlsCodec = new ThreadLocal<EncoderDecoderPair>() {
-          @Override protected EncoderDecoderPair initialValue() {
-            return new EncoderDecoderPair();
-          }
-      };
-
     /**
      * @deprecated This constructor's visibility will be reduced to the default scope in a future release.
      * Client code outside this module should use a {@link MessageFactory} instead
@@ -573,9 +559,8 @@ public class MessageImpl implements ProtonJMessage
     @Override
     public int decode(byte[] data, int offset, int length)
     {
-        DecoderImpl decoder = tlsCodec.get().decoder;
-        final ByteBuffer buffer = ByteBuffer.wrap(data, offset, length);
-        decoder.setByteBuffer(buffer);
+        DecoderImpl decoder = DecoderFactory.getDecoder();
+        final ReadableBuffer buffer = new ReadableBuffer.ByteBufferReader(ByteBuffer.wrap(data, offset, length));
 
         _header = null;
         _deliveryAnnotations = null;
@@ -588,14 +573,14 @@ public class MessageImpl implements ProtonJMessage
 
         if(buffer.hasRemaining())
         {
-            section = (Section) decoder.readObject();
+            section = (Section) decoder.readObject(buffer);
         }
         if(section instanceof Header)
         {
             _header = (Header) section;
             if(buffer.hasRemaining())
             {
-                section = (Section) decoder.readObject();
+                section = (Section) decoder.readObject(buffer);
             }
             else
             {
@@ -609,7 +594,7 @@ public class MessageImpl implements ProtonJMessage
 
             if(buffer.hasRemaining())
             {
-                section = (Section) decoder.readObject();
+                section = (Section) decoder.readObject(buffer);
             }
             else
             {
@@ -623,7 +608,7 @@ public class MessageImpl implements ProtonJMessage
 
             if(buffer.hasRemaining())
             {
-                section = (Section) decoder.readObject();
+                section = (Section) decoder.readObject(buffer);
             }
             else
             {
@@ -637,7 +622,7 @@ public class MessageImpl implements ProtonJMessage
 
             if(buffer.hasRemaining())
             {
-                section = (Section) decoder.readObject();
+                section = (Section) decoder.readObject(buffer);
             }
             else
             {
@@ -651,7 +636,7 @@ public class MessageImpl implements ProtonJMessage
 
             if(buffer.hasRemaining())
             {
-                section = (Section) decoder.readObject();
+                section = (Section) decoder.readObject(buffer);
             }
             else
             {
@@ -665,7 +650,7 @@ public class MessageImpl implements ProtonJMessage
 
             if(buffer.hasRemaining())
             {
-                section = (Section) decoder.readObject();
+                section = (Section) decoder.readObject(buffer);
             }
             else
             {
@@ -679,8 +664,6 @@ public class MessageImpl implements ProtonJMessage
 
         }
 
-        decoder.setByteBuffer(null);
-        
         return length-buffer.remaining();
 
     }
@@ -708,38 +691,36 @@ public class MessageImpl implements ProtonJMessage
     public int encode(WritableBuffer buffer)
     {
         int length = buffer.remaining();
-        EncoderImpl encoder = tlsCodec.get().encoder;
-        encoder.setByteBuffer(buffer);
+        EncoderImpl encoder = DecoderFactory.getEncoder();
 
         if(getHeader() != null)
         {
-            encoder.writeObject(getHeader());
+            encoder.writeObject(buffer, getHeader());
         }
         if(getDeliveryAnnotations() != null)
         {
-            encoder.writeObject(getDeliveryAnnotations());
+            encoder.writeObject(buffer, getDeliveryAnnotations());
         }
         if(getMessageAnnotations() != null)
         {
-            encoder.writeObject(getMessageAnnotations());
+            encoder.writeObject(buffer, getMessageAnnotations());
         }
         if(getProperties() != null)
         {
-            encoder.writeObject(getProperties());
+            encoder.writeObject(buffer, getProperties());
         }
         if(getApplicationProperties() != null)
         {
-            encoder.writeObject(getApplicationProperties());
+            encoder.writeObject(buffer, getApplicationProperties());
         }
         if(getBody() != null)
         {
-            encoder.writeObject(getBody());
+            encoder.writeObject(buffer, getBody());
         }
         if(getFooter() != null)
         {
-            encoder.writeObject(getFooter());
+            encoder.writeObject(buffer, getFooter());
         }
-        encoder.setByteBuffer((WritableBuffer)null);
 
         return length - buffer.remaining();
     }

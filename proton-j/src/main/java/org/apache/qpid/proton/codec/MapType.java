@@ -92,18 +92,15 @@ public class MapType extends AbstractPrimitiveType<Map>
             implements MapEncoding
     {
 
-        private Map _value;
-        private int _length;
-
         public AllMapEncoding(final EncoderImpl encoder, final DecoderImpl decoder)
         {
             super(encoder, decoder);
         }
 
         @Override
-        protected void writeEncodedValue(final Map val)
+        protected void writeEncodedValue(WritableBuffer buffer, final Map val)
         {
-            getEncoder().writeRaw(2 * val.size());
+            getEncoder().writeRaw(buffer, 2 * val.size());
             
 
             Iterator<Map.Entry> iter = val.entrySet().iterator();
@@ -112,18 +109,19 @@ public class MapType extends AbstractPrimitiveType<Map>
             {
                 Map.Entry element = iter.next();
                 TypeEncoding elementEncoding = getEncoder().getType(element.getKey()).getEncoding(element.getKey());
-                elementEncoding.writeConstructor();
-                elementEncoding.writeValue(element.getKey());
+                elementEncoding.writeConstructor(buffer);
+                elementEncoding.writeValue(buffer, element.getKey());
                 elementEncoding = getEncoder().getType(element.getValue()).getEncoding(element.getValue());
-                elementEncoding.writeConstructor();
-                elementEncoding.writeValue(element.getValue());
+                elementEncoding.writeConstructor(buffer);
+                elementEncoding.writeValue(buffer, element.getValue());
             }
         }
 
         @Override
         protected int getEncodedValueSize(final Map val)
         {
-            return 4 + ((val == _value) ? _length : calculateSize(val, getEncoder()));
+            CachedCalculation calculation = CachedCalculation.getCache();
+            return 4 + ((val == calculation.getVal()) ? calculation.getSize() : calculateSize(val, getEncoder()));
         }
 
 
@@ -143,19 +141,19 @@ public class MapType extends AbstractPrimitiveType<Map>
             return (getType() == encoding.getType());
         }
 
-        public Map readValue()
+        public Map readValue(ReadableBuffer buffer)
         {
 
             DecoderImpl decoder = getDecoder();
-            int size = decoder.readRawInt();
+            int size = decoder.readRawInt(buffer);
             // todo - limit the decoder with size
-            int count = decoder.readRawInt();
+            int count = decoder.readRawInt(buffer);
             Map map = new LinkedHashMap(count);
             for(int i = 0; i < count; i++)
             {
-                Object key = decoder.readObject();
+                Object key = decoder.readObject(buffer);
                 i++;
-                Object value = decoder.readObject();
+                Object value = decoder.readObject(buffer);
                 map.put(key, value);
             }
             return map;
@@ -163,8 +161,7 @@ public class MapType extends AbstractPrimitiveType<Map>
 
         public void setValue(final Map value, final int length)
         {
-            _value = value;
-            _length = length;
+            CachedCalculation.setCachedValue(value, length);
         }
     }
 
@@ -173,18 +170,15 @@ public class MapType extends AbstractPrimitiveType<Map>
             implements MapEncoding
     {
 
-        private Map _value;
-        private int _length;
-
         public ShortMapEncoding(final EncoderImpl encoder, final DecoderImpl decoder)
         {
             super(encoder, decoder);
         }
 
         @Override
-        protected void writeEncodedValue(final Map val)
+        protected void writeEncodedValue(WritableBuffer buffer, final Map val)
         {
-            getEncoder().writeRaw((byte)(2*val.size()));
+            getEncoder().writeRaw(buffer, (byte)(2*val.size()));
                 
 
             Iterator<Map.Entry> iter = val.entrySet().iterator();
@@ -193,18 +187,19 @@ public class MapType extends AbstractPrimitiveType<Map>
             {
                 Map.Entry element = iter.next();
                 TypeEncoding elementEncoding = getEncoder().getType(element.getKey()).getEncoding(element.getKey());
-                elementEncoding.writeConstructor();
-                elementEncoding.writeValue(element.getKey());
+                elementEncoding.writeConstructor(buffer);
+                elementEncoding.writeValue(buffer, element.getKey());
                 elementEncoding = getEncoder().getType(element.getValue()).getEncoding(element.getValue());
-                elementEncoding.writeConstructor();
-                elementEncoding.writeValue(element.getValue());
+                elementEncoding.writeConstructor(buffer);
+                elementEncoding.writeValue(buffer, element.getValue());
             }
         }
 
         @Override
         protected int getEncodedValueSize(final Map val)
         {
-            return 1 + ((val == _value) ? _length : calculateSize(val, getEncoder()));
+            CachedCalculation calculation = CachedCalculation.getCache();
+            return 1 + ((val == calculation.getVal()) ? calculation.getSize() : calculateSize(val, getEncoder()));
         }
 
 
@@ -224,19 +219,19 @@ public class MapType extends AbstractPrimitiveType<Map>
             return encoder == this;
         }
 
-        public Map readValue()
+        public Map readValue(ReadableBuffer buffer)
         {
             DecoderImpl decoder = getDecoder();
-            int size = ((int)decoder.readRawByte()) & 0xff;
+            int size = ((int)decoder.readRawByte(buffer)) & 0xff;
             // todo - limit the decoder with size
-            int count = ((int)decoder.readRawByte()) & 0xff;
+            int count = ((int)decoder.readRawByte(buffer)) & 0xff;
 
             Map map = new LinkedHashMap(count);
             for(int i = 0; i < count; i++)
             {
-                Object key = decoder.readObject();
+                Object key = decoder.readObject(buffer);
                 i++;
-                Object value = decoder.readObject();
+                Object value = decoder.readObject(buffer);
                 map.put(key, value);
             }
             return map;
@@ -244,8 +239,7 @@ public class MapType extends AbstractPrimitiveType<Map>
 
         public void setValue(final Map value, final int length)
         {
-            _value = value;
-            _length = length;
+            CachedCalculation.setCachedValue(value, length);
         }
     }
 }

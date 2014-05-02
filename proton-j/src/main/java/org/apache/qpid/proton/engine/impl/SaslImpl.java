@@ -37,9 +37,7 @@ import org.apache.qpid.proton.amqp.security.SaslFrameBody;
 import org.apache.qpid.proton.amqp.security.SaslInit;
 import org.apache.qpid.proton.amqp.security.SaslMechanisms;
 import org.apache.qpid.proton.amqp.security.SaslResponse;
-import org.apache.qpid.proton.codec.AMQPDefinedTypes;
-import org.apache.qpid.proton.codec.DecoderImpl;
-import org.apache.qpid.proton.codec.EncoderImpl;
+import org.apache.qpid.proton.codec.DecoderFactory;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.TransportException;
@@ -49,9 +47,6 @@ public class SaslImpl implements Sasl, SaslFrameBody.SaslFrameBodyHandler<Void>,
     private static final Logger _logger = Logger.getLogger(SaslImpl.class.getName());
 
     public static final byte SASL_FRAME_TYPE = (byte) 1;
-
-    private final DecoderImpl _decoder = new DecoderImpl();
-    private final EncoderImpl _encoder = new EncoderImpl(_decoder);
 
     private boolean _tail_closed = false;
     private final ByteBuffer _inputBuffer;
@@ -90,10 +85,8 @@ public class SaslImpl implements Sasl, SaslFrameBody.SaslFrameBodyHandler<Void>,
     {
         _inputBuffer = newWriteableBuffer(maxFrameSize);
         _outputBuffer = newWriteableBuffer(maxFrameSize);
-
-        AMQPDefinedTypes.registerAllTypes(_decoder,_encoder);
-        _frameParser = new SaslFrameParser(this, _decoder);
-        _frameWriter = new FrameWriter(_encoder, maxFrameSize, FrameWriter.SASL_FRAME_TYPE, null, this);
+        _frameParser = new SaslFrameParser(this, DecoderFactory.getDecoder());
+        _frameWriter = new FrameWriter(DecoderFactory.getEncoder(), maxFrameSize, FrameWriter.SASL_FRAME_TYPE, null, this);
     }
 
     @Override

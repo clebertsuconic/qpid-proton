@@ -32,6 +32,7 @@ import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.transport.FrameBody;
 import org.apache.qpid.proton.codec.ByteBufferDecoder;
 import org.apache.qpid.proton.codec.DecodeException;
+import org.apache.qpid.proton.codec.ReadableBuffer;
 import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.TransportException;
 import org.apache.qpid.proton.framing.TransportFrame;
@@ -370,8 +371,8 @@ class FrameParser implements TransportInput
                         if (frameBodySize > 0)
                         {
 
-                            _decoder.setByteBuffer(in);
-                            Object val = _decoder.readObject();
+                            // no more need to setBuffer
+                            Object val = _decoder.readObject(new ReadableBuffer.ByteBufferReader(in));
 
                             Binary payload;
 

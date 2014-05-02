@@ -41,10 +41,7 @@ import org.apache.qpid.proton.amqp.transport.FrameBody;
 import org.apache.qpid.proton.amqp.transport.Open;
 import org.apache.qpid.proton.amqp.transport.Role;
 import org.apache.qpid.proton.amqp.transport.Transfer;
-import org.apache.qpid.proton.codec.AMQPDefinedTypes;
-import org.apache.qpid.proton.codec.DecoderImpl;
-import org.apache.qpid.proton.codec.EncoderImpl;
-import org.apache.qpid.proton.codec.WritableBuffer;
+import org.apache.qpid.proton.codec.DecoderFactory;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
@@ -85,9 +82,6 @@ public class TransportImpl extends EndpointImpl
     private Map<LinkImpl, TransportLink<?>> _transportLinkState = new HashMap<LinkImpl, TransportLink<?>>();
 
 
-    private DecoderImpl _decoder = new DecoderImpl();
-    private EncoderImpl _encoder = new EncoderImpl(_decoder);
-
     private int _maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
     private int _remoteMaxFrameSize = 512;
     private int _channelMax = 65535;
@@ -100,8 +94,6 @@ public class TransportImpl extends EndpointImpl
     private SaslImpl _sasl;
     private SslImpl _ssl;
     private final Ref<ProtocolTracer> _protocolTracer = new Ref(null);
-
-    private ByteBuffer _lastInputBuffer;
 
     private TransportResult _lastTransportResult = TransportResultFactory.ok();
 
@@ -126,10 +118,8 @@ public class TransportImpl extends EndpointImpl
      */
     TransportImpl(int maxFrameSize)
     {
-        AMQPDefinedTypes.registerAllTypes(_decoder, _encoder);
-
         _maxFrameSize = maxFrameSize;
-        _frameWriter = new FrameWriter(_encoder, _remoteMaxFrameSize,
+        _frameWriter = new FrameWriter(DecoderFactory.getEncoder(), _remoteMaxFrameSize,
                                        FrameWriter.AMQP_FRAME_TYPE,
                                        _protocolTracer,
                                        this);
@@ -141,7 +131,7 @@ public class TransportImpl extends EndpointImpl
         if(!_init)
         {
             _init = true;
-            _frameParser = new FrameParser(_frameHandler , _decoder, _maxFrameSize);
+            _frameParser = new FrameParser(_frameHandler , DecoderFactory.getDecoder(), _maxFrameSize);
             _inputProcessor = _frameParser;
             _outputProcessor = new TransportOutputAdaptor(this, _maxFrameSize);
         }

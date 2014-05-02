@@ -27,8 +27,10 @@ import junit.framework.Assert;
 
 import org.apache.qpid.proton.amqp.transport.Transfer;
 import org.apache.qpid.proton.codec.AMQPDefinedTypes;
+import org.apache.qpid.proton.codec.DecoderFactory;
 import org.apache.qpid.proton.codec.DecoderImpl;
 import org.apache.qpid.proton.codec.EncoderImpl;
+import org.apache.qpid.proton.codec.ReadableBuffer;
 import org.apache.qpid.proton.microbench.protoype.RawAMQPParser;
 import org.junit.Test;
 
@@ -68,19 +70,24 @@ public class MicrobenchParserTest
 
     }
 
+    /**
+     * This method could be used to validate other package types
+     * @param parseString
+     * @param jump
+     * @param name
+     */
     private void readMethod(String parseString, int jump, String name)
     {
 
         byte[] allocated = hexStringToByteArray(parseString);
 
-        DecoderImpl decoder = new DecoderImpl();
-        EncoderImpl encoder = new EncoderImpl(decoder);
-        AMQPDefinedTypes.registerAllTypes(decoder, encoder);
+        DecoderImpl decoder = DecoderFactory.getDecoder();
+        EncoderImpl encoder = DecoderFactory.getEncoder();
 
-        ByteBuffer readableBuffer = ByteBuffer.allocate(allocated.length);
-        readableBuffer.put(allocated);
+        ByteBuffer buffer = ByteBuffer.allocate(allocated.length);
+        buffer.put(allocated);
 
-        decoder.setByteBuffer(readableBuffer);
+        ReadableBuffer readableBuffer = new ReadableBuffer.ByteBufferReader(buffer);
 
         long time = 0;
         for (long i = 0; i < 10000000L; i++)
@@ -91,7 +98,7 @@ public class MicrobenchParserTest
             }
             readableBuffer.position(jump); // moving DOF
 
-            decoder.readObject();
+            decoder.readObject(readableBuffer);
         }
 
         long timeEnd = System.currentTimeMillis() - time;
@@ -149,10 +156,10 @@ public class MicrobenchParserTest
         EncoderImpl encoder = new EncoderImpl(decoder);
         AMQPDefinedTypes.registerAllTypes(decoder, encoder);
 
-        decoder.setByteBuffer(buffer);
 
+        ReadableBuffer readableBuffer = new ReadableBuffer.ByteBufferReader(buffer);
 
-        Transfer transfer2 = (Transfer)decoder.readObject();
+        Transfer transfer2 = (Transfer)decoder.readObject(readableBuffer);
 
 
         Assert.assertEquals(transfer.toString(), transfer2.toString());
