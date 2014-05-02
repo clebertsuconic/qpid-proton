@@ -43,6 +43,7 @@ import org.apache.qpid.proton.amqp.transport.Open;
 import org.apache.qpid.proton.amqp.transport.Role;
 import org.apache.qpid.proton.amqp.transport.Transfer;
 import org.apache.qpid.proton.codec.AMQPDefinedTypes;
+import org.apache.qpid.proton.codec.DecoderFactory;
 import org.apache.qpid.proton.codec.DecoderImpl;
 import org.apache.qpid.proton.codec.EncoderImpl;
 import org.apache.qpid.proton.engine.Connection;
@@ -154,10 +155,8 @@ public class TransportImpl extends EndpointImpl
      */
     TransportImpl(int maxFrameSize)
     {
-        AMQPDefinedTypes.registerAllTypes(_decoder, _encoder);
-
         _maxFrameSize = maxFrameSize;
-        _frameWriter = new FrameWriter(_encoder, _remoteMaxFrameSize,
+        _frameWriter = new FrameWriter(DecoderFactory.getEncoder(), _remoteMaxFrameSize,
                                        FrameWriter.AMQP_FRAME_TYPE,
                                        _protocolTracer,
                                        this);
@@ -168,7 +167,7 @@ public class TransportImpl extends EndpointImpl
         if(!_init)
         {
             _init = true;
-            _frameParser = new FrameParser(_frameHandler , _decoder, _maxFrameSize);
+            _frameParser = new FrameParser(_frameHandler , DecoderFactory.getDecoder(), _maxFrameSize);
             _inputProcessor = _frameParser;
             _outputProcessor = new TransportOutputAdaptor(this, _maxFrameSize);
         }

@@ -25,10 +25,19 @@ import java.nio.ByteBuffer;
 
 import junit.framework.Assert;
 
+import org.apache.qpid.proton.amqp.UnsignedInteger;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.transport.DeliveryState;
+import org.apache.qpid.proton.amqp.transport.Disposition;
+import org.apache.qpid.proton.amqp.transport.Role;
 import org.apache.qpid.proton.amqp.transport.Transfer;
 import org.apache.qpid.proton.codec.AMQPDefinedTypes;
+import org.apache.qpid.proton.codec.DecoderFactory;
 import org.apache.qpid.proton.codec.DecoderImpl;
 import org.apache.qpid.proton.codec.EncoderImpl;
+import org.apache.qpid.proton.codec.ReadableBuffer;
+import org.apache.qpid.proton.codec.WritableBuffer;
+import org.apache.qpid.proton.engine.impl.ByteBufferUtils;
 import org.apache.qpid.proton.microbench.protoype.RawAMQPParser;
 import org.junit.Test;
 
@@ -45,6 +54,10 @@ public class MicrobenchParserTest
 /*  3 */ "04A0" + "0800" + "0000" + "0000" +
 /*  4 */ "0000" + "0443" + "41";
 
+    String disposition =
+    /*  1 */ "0053" + "15C0" + "0A06" + "4143" +
+    /*  2 */ "4341" + "0053" + "2445" + "41" +
+    /*  3 */ "";
 
 /*
     Uncomment this if you want to do more comparisons
@@ -59,6 +72,39 @@ public class MicrobenchParserTest
         }
     } */
 
+    @Test
+    public void testDisposition()
+    {
+        Disposition disposition = new Disposition();
+        disposition.setBatchable(true);
+        disposition.setFirst(new UnsignedInteger(0));
+        disposition.setLast(new UnsignedInteger(0));
+        disposition.setRole(Role.RECEIVER);
+        disposition.setState(Accepted.getInstance());
+        disposition.setSettled(true);
+
+
+        ByteBuffer buffer = ByteBuffer.allocate(1024 * 2);
+
+        WritableBuffer writableBuffer = new WritableBuffer.ByteBufferWrapper(buffer);
+
+
+        DecoderFactory.getEncoder().writeObject(writableBuffer, disposition);
+
+        System.out.println("Position = " + buffer.position());
+
+        byte[] bytes = new byte[buffer.position()];
+
+        buffer.rewind();
+
+        buffer.get(bytes);
+
+
+        System.out.println("String disposition = " + ByteBufferUtils.formatGroup(ByteBufferUtils.bytesToHex(bytes), 4, 16));
+
+
+    }
+
 
     @Test
     public void testProtonDecoder()
@@ -68,19 +114,33 @@ public class MicrobenchParserTest
 
     }
 
+
+    @Test
+    public void testReadDisposition()
+    {
+
+        readMethod(disposition, 0, "testReadDisposition");
+
+    }
+
+    /**
+     * This method could be used to validate other package types
+     * @param parseString
+     * @param jump
+     * @param name
+     */
     private void readMethod(String parseString, int jump, String name)
     {
 
         byte[] allocated = hexStringToByteArray(parseString);
 
-        DecoderImpl decoder = new DecoderImpl();
-        EncoderImpl encoder = new EncoderImpl(decoder);
-        AMQPDefinedTypes.registerAllTypes(decoder, encoder);
+        DecoderImpl decoder = DecoderFactory.getDecoder();
+        EncoderImpl encoder = DecoderFactory.getEncoder();
 
-        ByteBuffer readableBuffer = ByteBuffer.allocate(allocated.length);
-        readableBuffer.put(allocated);
+        ByteBuffer buffer = ByteBuffer.allocate(allocated.length);
+        buffer.put(allocated);
 
-        decoder.setByteBuffer(readableBuffer);
+        ReadableBuffer readableBuffer = new ReadableBuffer.ByteBufferReader(buffer);
 
         long time = 0;
         for (long i = 0; i < 10000000L; i++)
@@ -91,7 +151,7 @@ public class MicrobenchParserTest
             }
             readableBuffer.position(jump); // moving DOF
 
-            decoder.readObject();
+            decoder.readObject(readableBuffer);
         }
 
         long timeEnd = System.currentTimeMillis() - time;
@@ -149,10 +209,10 @@ public class MicrobenchParserTest
         EncoderImpl encoder = new EncoderImpl(decoder);
         AMQPDefinedTypes.registerAllTypes(decoder, encoder);
 
-        decoder.setByteBuffer(buffer);
 
+        ReadableBuffer readableBuffer = new ReadableBuffer.ByteBufferReader(buffer);
 
-        Transfer transfer2 = (Transfer)decoder.readObject();
+        Transfer transfer2 = (Transfer)decoder.readObject(readableBuffer);
 
 
         Assert.assertEquals(transfer.toString(), transfer2.toString());
