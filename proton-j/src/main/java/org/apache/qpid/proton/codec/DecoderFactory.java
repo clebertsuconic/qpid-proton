@@ -18,25 +18,34 @@
  * under the License.
  *
  */
+
 package org.apache.qpid.proton.codec;
 
-abstract class LargeFloatingSizePrimitiveTypeEncoding<T> extends FloatingSizePrimitiveTypeEncoding<T>
+/**
+ * @author Clebert Suconic
+ */
+
+public class DecoderFactory
 {
 
-    LargeFloatingSizePrimitiveTypeEncoding(final EncoderImpl encoder, DecoderImpl decoder)
+
+    static final DecoderImpl decoder = new DecoderImpl();
+    static final EncoderImpl encoder = new EncoderImpl(decoder);
+
+    static
     {
-        super(encoder, decoder);
+        AMQPDefinedTypes.registerAllTypes(decoder, encoder);
     }
 
-    @Override
-    public int getSizeBytes()
+
+    public static final DecoderImpl getDecoder()
     {
-        return 4;
+        return decoder;
     }
 
-    @Override
-    protected void writeSize(WritableBuffer buffer, final T val)
+    public static final EncoderImpl getEncoder()
     {
-        getEncoder().writeRaw(buffer, getEncodedValueSize(val));
+        return encoder;
     }
+
 }
