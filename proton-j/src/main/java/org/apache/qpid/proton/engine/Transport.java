@@ -67,42 +67,42 @@ import org.apache.qpid.proton.engine.impl.TransportImpl;
 public interface Transport extends Endpoint
 {
 
-    public static final class Factory
+   final class Factory
     {
         public static Transport create() {
             return new TransportImpl();
         }
     }
 
-    public static final int TRACE_OFF = 0;
-    public static final int TRACE_RAW = 1;
-    public static final int TRACE_FRM = 2;
-    public static final int TRACE_DRV = 4;
+    int TRACE_OFF = 0;
+    int TRACE_RAW = 1;
+    int TRACE_FRM = 2;
+    int TRACE_DRV = 4;
 
-    public static final int DEFAULT_MAX_FRAME_SIZE = -1;
+    int DEFAULT_MAX_FRAME_SIZE = -1;
 
     /** the lower bound for the agreed maximum frame size (in bytes). */
-    public int MIN_MAX_FRAME_SIZE = 512;
-    public int SESSION_WINDOW = 16*1024;
-    public int END_OF_STREAM = -1;
+    int MIN_MAX_FRAME_SIZE = 512;
+    int SESSION_WINDOW = 16*1024;
+    int END_OF_STREAM = -1;
 
-    public void trace(int levels);
+    void trace(int levels);
 
-    public void bind(Connection connection);
-    public void unbind();
+    void bind(Connection connection);
+    void unbind();
 
-    public int capacity();
-    public ByteBuffer tail();
-    public void process() throws TransportException;
-    public void close_tail();
+    int capacity();
+    ByteBuffer tail();
+    void process() throws TransportException;
+    void close_tail();
 
 
-    public int pending();
-    public ByteBuffer head();
-    public void pop(int bytes);
-    public void close_head();
+    int pending();
+    ByteBuffer head();
+    void pop(int bytes);
+    void close_head();
 
-    public boolean isClosed();
+    boolean isClosed();
 
     /**
      * Processes the provided input.
@@ -117,7 +117,7 @@ public interface Transport extends Endpoint
      * @deprecated use {@link #getInputBuffer()} and {@link #processInput()} instead.
      */
     @Deprecated
-    public int input(byte[] bytes, int offset, int size);
+    int input(byte[] bytes, int offset, int size);
 
     /**
      * Get a buffer that can be used to write input data into the transport.
@@ -155,7 +155,7 @@ public interface Transport extends Endpoint
      * @deprecated use {@link #getOutputBuffer()} and {@link #outputConsumed()} instead
      */
     @Deprecated
-    public int output(byte[] dest, int offset, int size);
+    int output(byte[] dest, int offset, int size);
 
     /**
      * Get a read-only byte buffer containing the transport's pending output.
