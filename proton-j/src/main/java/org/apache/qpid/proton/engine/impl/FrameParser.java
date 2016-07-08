@@ -38,6 +38,7 @@ import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.TransportException;
 import org.apache.qpid.proton.framing.TransportFrame;
 
+/** This will aggregate bytes as they come in, making sure a whole command is processed before it can flush for anything. */
 class FrameParser implements TransportInput
 {
     private static final Logger TRACE_LOGGER = Logger.getLogger("proton.trace");
