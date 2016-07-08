@@ -26,18 +26,22 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
+import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.ProtonJSession;
+import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
 public class SessionImpl extends EndpointImpl implements ProtonJSession
 {
-    private final ConnectionImpl _connection;
+    private final Connection _connection;
 
-    private Map<String, SenderImpl> _senders = new LinkedHashMap<String, SenderImpl>();
-    private Map<String, ReceiverImpl>  _receivers = new LinkedHashMap<String, ReceiverImpl>();
-    private List<LinkImpl> _oldLinksToFree = new ArrayList<LinkImpl>();
+    private Map<String, Sender> _senders = new LinkedHashMap<>();
+    private Map<String, Receiver>  _receivers = new LinkedHashMap<>();
+    private List<Link> _oldLinksToFree = new ArrayList<>();
     private TransportSession _transportSession;
     private int _incomingCapacity = 1024*1024;
     private int _incomingBytes = 0;
@@ -46,10 +50,10 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     private int _outgoingDeliveries = 0;
     private long _outgoingWindow = Integer.MAX_VALUE;
 
-    private LinkNode<SessionImpl> _node;
+    private LinkNode<Session> _node;
 
 
-    SessionImpl(ConnectionImpl connection)
+    SessionImpl(Connection connection)
     {
         _connection = connection;
         _connection.incref();
@@ -58,9 +62,9 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     }
 
     @Override
-    public SenderImpl sender(String name)
+    public Sender sender(String name)
     {
-        SenderImpl sender = _senders.get(name);
+        Sender sender = _senders.get(name);
         if(sender == null)
         {
             sender = new SenderImpl(this, name);
@@ -81,9 +85,9 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     }
 
     @Override
-    public ReceiverImpl receiver(String name)
+    public Receiver receiver(String name)
     {
-        ReceiverImpl receiver = _receivers.get(name);
+        Receiver receiver = _receivers.get(name);
         if(receiver == null)
         {
             receiver = new ReceiverImpl(this, name);
@@ -106,21 +110,21 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     @Override
     public Session next(EnumSet<EndpointState> local, EnumSet<EndpointState> remote)
     {
-        LinkNode.Query<SessionImpl> query = new EndpointImplQuery<SessionImpl>(local, remote);
+        LinkNode.Query<Session> query = new EndpointImplQuery(local, remote);
 
-        LinkNode<SessionImpl> sessionNode = _node.next(query);
+        LinkNode<Session> sessionNode = _node.next(query);
 
         return sessionNode == null ? null : sessionNode.getValue();
     }
 
     @Override
-    protected ConnectionImpl getConnectionImpl()
+    protected Connection getConnectionImpl()
     {
         return _connection;
     }
 
     @Override
-    public ConnectionImpl getConnection()
+    public Connection getConnection()
     {
         return getConnectionImpl();
     }
@@ -137,30 +141,30 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
         _connection.removeSessionEndpoint(_node);
         _node = null;
 
-        List<SenderImpl> senders = new ArrayList<SenderImpl>(_senders.values());
-        for(SenderImpl sender : senders) {
+        List<Sender> senders = new ArrayList<Sender>(_senders.values());
+        for(Sender sender : senders) {
             sender.free();
         }
         _senders.clear();
 
-        List<ReceiverImpl> receivers = new ArrayList<ReceiverImpl>(_receivers.values());
-        for(ReceiverImpl receiver : receivers) {
+        List<Receiver> receivers = new ArrayList<Receiver>(_receivers.values());
+        for(Receiver receiver : receivers) {
             receiver.free();
         }
         _receivers.clear();
 
-        List<LinkImpl> links = new ArrayList<LinkImpl>(_oldLinksToFree);
-        for(LinkImpl link : links) {
+        List<Link> links = new ArrayList<Link>(_oldLinksToFree);
+        for(Link link : links) {
             link.free();
         }
     }
 
-    void modifyEndpoints() {
-        for (SenderImpl snd : _senders.values()) {
+    public void modifyEndpoints() {
+        for (Sender snd : _senders.values()) {
             snd.modifyEndpoints();
         }
 
-        for (ReceiverImpl rcv : _receivers.values()) {
+        for (Receiver rcv : _receivers.values()) {
             rcv.modifyEndpoints();
         }
         modified();
@@ -176,7 +180,7 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
         _transportSession = transportSession;
     }
 
-    void setNode(LinkNode<SessionImpl> node)
+    void setNode(LinkNode<Session> node)
     {
         _node = node;
     }
@@ -184,7 +188,7 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     void freeSender(SenderImpl sender)
     {
         String name = sender.getName();
-        SenderImpl existing = _senders.get(name);
+        Sender existing = _senders.get(name);
         if (sender.equals(existing))
         {
             _senders.remove(name);
@@ -195,10 +199,10 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
         }
     }
 
-    void freeReceiver(ReceiverImpl receiver)
+    void freeReceiver(Receiver receiver)
     {
         String name = receiver.getName();
-        ReceiverImpl existing = _receivers.get(name);
+        Receiver existing = _receivers.get(name);
         if (receiver.equals(existing))
         {
             _receivers.remove(name);

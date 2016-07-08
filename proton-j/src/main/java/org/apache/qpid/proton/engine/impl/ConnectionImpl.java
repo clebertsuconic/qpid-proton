@@ -29,36 +29,45 @@ import java.util.Map;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.Open;
 import org.apache.qpid.proton.engine.Collector;
+import org.apache.qpid.proton.engine.Delivery;
+import org.apache.qpid.proton.engine.Endpoint;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.ProtonJConnection;
 import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.engine.Transport;
+import org.apache.qpid.proton.machine.BareConnection;
 import org.apache.qpid.proton.reactor.Reactor;
 
 public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
 {
     public static final int MAX_CHANNELS = 65535;
 
-    private List<SessionImpl> _sessions = new ArrayList<SessionImpl>();
-    private EndpointImpl _transportTail;
-    private EndpointImpl _transportHead;
+    private List<Session> _sessions = new ArrayList<>();
+    private Endpoint _transportTail;
+    private Endpoint _transportHead;
     private int _maxChannels = MAX_CHANNELS;
 
-    private LinkNode<SessionImpl> _sessionHead;
-    private LinkNode<SessionImpl> _sessionTail;
+    // TODO-now: use Collections here
+    private LinkNode<Session> _sessionHead;
+    private LinkNode<Session> _sessionTail;
+
+    // TODO-now: use Collections here
+    private LinkNode<Link> _linkHead;
+    private LinkNode<Link> _linkTail;
 
 
-    private LinkNode<LinkImpl> _linkHead;
-    private LinkNode<LinkImpl> _linkTail;
+    // TODO-now: use Collections here
+    private Delivery _workHead;
+    private Delivery _workTail;
 
-
-    private DeliveryImpl _workHead;
-    private DeliveryImpl _workTail;
+    // TODO-now: use Collections here
+    private Delivery _transportWorkHead;
+    private Delivery _transportWorkTail;
 
     private TransportImpl _transport;
-    private DeliveryImpl _transportWorkHead;
-    private DeliveryImpl _transportWorkTail;
+
     private int _transportWorkSize = 0;
     private String _localContainerId = "";
     private String _localHostname;
@@ -95,14 +104,14 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         return session;
     }
 
-    void freeSession(SessionImpl session)
+    public void freeSession(Session session)
     {
         _sessions.remove(session);
     }
 
-    protected LinkNode<SessionImpl> addSessionEndpoint(SessionImpl endpoint)
+    public LinkNode<Session> addSessionEndpoint(Session endpoint)
     {
-        LinkNode<SessionImpl> node;
+        LinkNode<Session> node;
         if(_sessionHead == null)
         {
             node = _sessionHead = _sessionTail = LinkNode.newList(endpoint);
@@ -114,10 +123,11 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         return node;
     }
 
-    void removeSessionEndpoint(LinkNode<SessionImpl> node)
+    // TODO-now: Remove this by regular connections
+    public void removeSessionEndpoint(LinkNode<Session> node)
     {
-        LinkNode<SessionImpl> prev = node.getPrev();
-        LinkNode<SessionImpl> next = node.getNext();
+        LinkNode<Session> prev = node.getPrev();
+        LinkNode<Session> next = node.getNext();
 
         if(_sessionHead == node)
         {
@@ -131,9 +141,9 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     }
 
 
-    protected LinkNode<LinkImpl> addLinkEndpoint(LinkImpl endpoint)
+    public LinkNode<Link> addLinkEndpoint(Link endpoint)
     {
-        LinkNode<LinkImpl> node;
+        LinkNode<Link> node;
         if(_linkHead == null)
         {
             node = _linkHead = _linkTail = LinkNode.newList(endpoint);
@@ -145,11 +155,10 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         return node;
     }
 
-
-    void removeLinkEndpoint(LinkNode<LinkImpl> node)
+    public void removeLinkEndpoint(LinkNode<Link> node)
     {
-        LinkNode<LinkImpl> prev = node.getPrev();
-        LinkNode<LinkImpl> next = node.getNext();
+        LinkNode<Link> prev = node.getPrev();
+        LinkNode<Link> next = node.getNext();
 
         if(_linkHead == node)
         {
@@ -172,8 +181,8 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         }
         else
         {
-            LinkNode.Query<SessionImpl> query = new EndpointImplQuery<SessionImpl>(local, remote);
-            LinkNode<SessionImpl> node = query.matches(_sessionHead) ? _sessionHead : _sessionHead.next(query);
+            LinkNode.Query<Session> query = new EndpointImplQuery(local, remote);
+            LinkNode<Session> node = query.matches(_sessionHead) ? _sessionHead : _sessionHead.next(query);
             return node == null ? null : node.getValue();
         }
     }
@@ -187,8 +196,8 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         }
         else
         {
-            LinkNode.Query<LinkImpl> query = new EndpointImplQuery<LinkImpl>(local, remote);
-            LinkNode<LinkImpl> node = query.matches(_linkHead) ? _linkHead : _linkHead.next(query);
+            LinkNode.Query<Link> query = new EndpointImplQuery(local, remote);
+            LinkNode<Link> node = query.matches(_linkHead) ? _linkHead : _linkHead.next(query);
             return node == null ? null : node.getValue();
         }
     }
@@ -206,16 +215,16 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
 
     @Override
     void doFree() {
-        List<SessionImpl> sessions = new ArrayList<SessionImpl>(_sessions);
+        List<Session> sessions = new ArrayList<>(_sessions);
         for(Session session : sessions) {
             session.free();
         }
         _sessions = null;
     }
 
-    void modifyEndpoints() {
+    public void modifyEndpoints() {
         if (_sessions != null) {
-            for (SessionImpl ssn: _sessions) {
+            for (Session ssn: _sessions) {
                 ssn.modifyEndpoints();
             }
         }
@@ -237,17 +246,17 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     }
 
 
-    EndpointImpl getTransportHead()
+    Endpoint getTransportHead()
     {
         return _transportHead;
     }
 
-    EndpointImpl getTransportTail()
+    Endpoint getTransportTail()
     {
         return _transportTail;
     }
 
-    void addModified(EndpointImpl endpoint)
+    public void addModified(Endpoint endpoint)
     {
         if(_transportTail == null)
         {
@@ -264,7 +273,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         }
     }
 
-    void removeModified(EndpointImpl endpoint)
+    public void removeModified(Endpoint endpoint)
     {
         if(_transportHead == endpoint)
         {
@@ -303,7 +312,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     }
 
     @Override
-    public DeliveryImpl getWorkHead()
+    public Delivery getWorkHead()
     {
         return _workHead;
     }
@@ -422,17 +431,18 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         _remoteHostname = remoteHostname;
     }
 
-    DeliveryImpl getWorkTail()
+    // TODO-now: remove this. collection usage
+    Delivery getWorkTail()
     {
         return _workTail;
     }
 
-    void removeWork(DeliveryImpl delivery)
+    public void removeWork(Delivery delivery)
     {
-        if (!delivery._work) return;
+        if (!delivery.isWork()) return;
 
-        DeliveryImpl next = delivery.getWorkNext();
-        DeliveryImpl prev = delivery.getWorkPrev();
+        Delivery next = delivery.getWorkNext();
+        Delivery prev = delivery.getWorkPrev();
 
         if (prev != null) {
             prev.setWorkNext(next);
@@ -454,12 +464,13 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
             _workTail = prev;
         }
 
-        delivery._work = false;
+        delivery.setWork(false);
     }
 
-    void addWork(DeliveryImpl delivery)
+
+    public void addWork(Delivery delivery)
     {
-        if (delivery._work) return;
+        if (delivery.isWork()) return;
 
         delivery.setWorkNext(null);
         delivery.setWorkPrev(_workTail);
@@ -474,10 +485,10 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
             _workHead = delivery;
         }
 
-        delivery._work = true;
+        delivery.setWork(true);
     }
 
-    public Iterator<DeliveryImpl> getWorkSequence()
+    public Iterator<Delivery> getWorkSequence()
     {
         return new WorkSequence(_workHead);
     }
@@ -493,11 +504,12 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         return _transport;
     }
 
-    private static class WorkSequence implements Iterator<DeliveryImpl>
+    // TODO-now: remove now, use collections
+    private static class WorkSequence implements Iterator<Delivery>
     {
-        private DeliveryImpl _next;
+        private Delivery _next;
 
-        public WorkSequence(DeliveryImpl workHead)
+        public WorkSequence(Delivery workHead)
         {
             _next = workHead;
         }
@@ -515,9 +527,9 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         }
 
         @Override
-        public DeliveryImpl next()
+        public Delivery next()
         {
-            DeliveryImpl next = _next;
+            Delivery next = _next;
             if(next != null)
             {
                 _next = next.getWorkNext();
@@ -526,7 +538,8 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         }
     }
 
-    DeliveryImpl getTransportWorkHead()
+    // TODO-now: use collections
+    Delivery getTransportWorkHead()
     {
         return _transportWorkHead;
     }
@@ -535,12 +548,13 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         return _transportWorkSize;
     }
 
-    public void removeTransportWork(DeliveryImpl delivery)
+    @Override
+    public void removeTransportWork(Delivery delivery)
     {
-        if (!delivery._transportWork) return;
+        if (!delivery.isTransportWork()) return;
 
-        DeliveryImpl next = delivery.getTransportWorkNext();
-        DeliveryImpl prev = delivery.getTransportWorkPrev();
+        Delivery next = delivery.getTransportWorkNext();
+        Delivery prev = delivery.getTransportWorkPrev();
 
         if (prev != null) {
             prev.setTransportWorkNext(next);
@@ -562,14 +576,15 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
             _transportWorkTail = prev;
         }
 
-        delivery._transportWork = false;
+        delivery.setTransportWork(false);
         _transportWorkSize--;
     }
 
-    void addTransportWork(DeliveryImpl delivery)
+    @Override
+    public void addTransportWork(Delivery delivery)
     {
         modified();
-        if (delivery._transportWork) return;
+        if (delivery.isTransportWork()) return;
 
         delivery.setTransportWorkNext(null);
         delivery.setTransportWorkPrev(_transportWorkTail);
@@ -584,11 +599,11 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
             _transportWorkHead = delivery;
         }
 
-        delivery._transportWork = true;
+        delivery.setTransportWork(true);
         _transportWorkSize++;
     }
 
-    void workUpdate(DeliveryImpl delivery)
+    public void workUpdate(Delivery delivery)
     {
         if(delivery != null)
         {
@@ -625,20 +640,20 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
 
         put(Event.Type.CONNECTION_INIT, this);
 
-        LinkNode<SessionImpl> ssn = _sessionHead;
+        LinkNode<Session> ssn = _sessionHead;
         while (ssn != null) {
             put(Event.Type.SESSION_INIT, ssn.getValue());
             ssn = ssn.getNext();
         }
 
-        LinkNode<LinkImpl> lnk = _linkHead;
+        LinkNode<Link> lnk = _linkHead;
         while (lnk != null) {
             put(Event.Type.LINK_INIT, lnk.getValue());
             lnk = lnk.getNext();
         }
     }
 
-    EventImpl put(Event.Type type, Object context)
+    public Event put(Event.Type type, Object context)
     {
         if (_collector != null) {
             return _collector.put(type, context);

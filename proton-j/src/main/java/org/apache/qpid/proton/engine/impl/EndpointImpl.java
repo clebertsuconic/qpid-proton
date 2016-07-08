@@ -22,10 +22,13 @@
 package org.apache.qpid.proton.engine.impl;
 
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.engine.Connection;
+import org.apache.qpid.proton.engine.Endpoint;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.ProtonJEndpoint;
 import org.apache.qpid.proton.engine.Record;
+import org.apache.qpid.proton.engine.Transport;
 
 public abstract class EndpointImpl implements ProtonJEndpoint
 {
@@ -34,19 +37,19 @@ public abstract class EndpointImpl implements ProtonJEndpoint
     private ErrorCondition _localError = new ErrorCondition();
     private ErrorCondition _remoteError = new ErrorCondition();
     private boolean _modified;
-    private EndpointImpl _transportNext;
-    private EndpointImpl _transportPrev;
+    private Endpoint _transportNext;
+    private Endpoint _transportPrev;
     private Object _context;
     private Record _attachments = new RecordImpl();
 
     private int refcount = 1;
     boolean freed = false;
 
-    void incref() {
+    public void incref() {
         refcount++;
     }
 
-    void decref() {
+    public void decref() {
         refcount--;
         if (refcount == 0) {
             postFinal();
@@ -125,23 +128,23 @@ public abstract class EndpointImpl implements ProtonJEndpoint
         return _remoteError;
     }
 
-    void setLocalState(EndpointState localState)
+    public void setLocalState(EndpointState localState)
     {
         _localState = localState;
     }
 
-    void setRemoteState(EndpointState remoteState)
+    public void setRemoteState(EndpointState remoteState)
     {
         // TODO - check state change legal
         _remoteState = remoteState;
     }
 
-    void modified()
+    public void modified()
     {
         modified(true);
     }
 
-    void modified(boolean emit)
+    public void modified(boolean emit)
     {
         if(!_modified)
         {
@@ -150,17 +153,17 @@ public abstract class EndpointImpl implements ProtonJEndpoint
         }
 
         if (emit) {
-            ConnectionImpl conn = getConnectionImpl();
-            TransportImpl trans = conn.getTransport();
+            Connection conn = getConnectionImpl();
+            Transport trans = conn.getTransport();
             if (trans != null) {
                 conn.put(Event.Type.TRANSPORT, trans);
             }
         }
     }
 
-    protected abstract ConnectionImpl getConnectionImpl();
+    protected abstract Connection getConnectionImpl();
 
-    void clearModified()
+    public void clearModified()
     {
         if(_modified)
         {
@@ -174,12 +177,14 @@ public abstract class EndpointImpl implements ProtonJEndpoint
         return _modified;
     }
 
-    EndpointImpl transportNext()
+    // TODO-now remove this: no API reason to keep it
+    public Endpoint transportNext()
     {
         return _transportNext;
     }
 
-    EndpointImpl transportPrev()
+    // TODO-now remove this: no API reason to keep it
+    public Endpoint transportPrev()
     {
         return _transportPrev;
     }
@@ -195,12 +200,14 @@ public abstract class EndpointImpl implements ProtonJEndpoint
         decref();
     }
 
-    void setTransportNext(EndpointImpl transportNext)
+    // TODO-now: Remove this, no API reason to keep it
+    public void setTransportNext(Endpoint transportNext)
     {
         _transportNext = transportNext;
     }
 
-    void setTransportPrev(EndpointImpl transportPrevious)
+    // TODO-now: Remove this, no API reason to keep it
+    public void setTransportPrev(Endpoint transportPrevious)
     {
         _transportPrev = transportPrevious;
     }

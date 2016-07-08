@@ -47,8 +47,11 @@ import org.apache.qpid.proton.codec.DecoderFactory;
 import org.apache.qpid.proton.codec.DecoderImpl;
 import org.apache.qpid.proton.codec.EncoderImpl;
 import org.apache.qpid.proton.engine.Connection;
+import org.apache.qpid.proton.engine.Delivery;
+import org.apache.qpid.proton.engine.Endpoint;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
+import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.ProtonJTransport;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Ssl;
@@ -169,6 +172,12 @@ public class TransportImpl extends EndpointImpl
             _outputProcessor = new TransportOutputAdaptor(this, _maxFrameSize);
         }
     }
+
+
+    public void modifyEndpoints() {
+       // modified(); TODO-now: I'm not sure it's needed.. Probably NOOP
+    }
+
 
     @Override
     public void trace(int levels) {
@@ -384,7 +393,7 @@ public class TransportImpl extends EndpointImpl
     {
         if(_connectionEndpoint != null && _isOpenSent)
         {
-            EndpointImpl endpoint = _connectionEndpoint.getTransportHead();
+            Endpoint endpoint = _connectionEndpoint.getTransportHead();
             while(endpoint != null)
             {
 
@@ -457,7 +466,7 @@ public class TransportImpl extends EndpointImpl
     {
         if(_connectionEndpoint != null && _isOpenSent && !_isCloseSent)
         {
-            EndpointImpl endpoint = _connectionEndpoint.getTransportHead();
+            Endpoint endpoint = _connectionEndpoint.getTransportHead();
             while(endpoint != null)
             {
 
@@ -488,10 +497,10 @@ public class TransportImpl extends EndpointImpl
     {
         if(_connectionEndpoint != null && _isOpenSent && !_isCloseSent)
         {
-            DeliveryImpl delivery = _connectionEndpoint.getTransportWorkHead();
+            Delivery delivery = _connectionEndpoint.getTransportWorkHead();
             while(delivery != null)
             {
-                LinkImpl link = delivery.getLink();
+                Link link = delivery.getLink();
                 if (link instanceof SenderImpl) {
                     if (processTransportWorkSender(delivery, (SenderImpl) link)) {
                         delivery = delivery.clearTransportWork();
@@ -509,7 +518,7 @@ public class TransportImpl extends EndpointImpl
         }
     }
 
-    private boolean processTransportWorkSender(DeliveryImpl delivery,
+    private boolean processTransportWorkSender(Delivery delivery,
                                                SenderImpl snd)
     {
         TransportSender tpLink = snd.getTransportLink();
@@ -524,7 +533,7 @@ public class TransportImpl extends EndpointImpl
            tpSession.isLocalChannelSet() &&
            tpLink.getLocalHandle() != null && !_frameWriter.isFull())
         {
-            DeliveryImpl inProgress = tpLink.getInProgressDelivery();
+            Delivery inProgress = tpLink.getInProgressDelivery();
             if(inProgress != null){
                 // There is an existing Delivery awaiting completion. Check it
                 // is the same Delivery object given and return if not, as we
@@ -634,7 +643,7 @@ public class TransportImpl extends EndpointImpl
         return !delivery.isBuffered();
     }
 
-    private boolean processTransportWorkReceiver(DeliveryImpl delivery,
+    private boolean processTransportWorkReceiver(Delivery delivery,
                                                  ReceiverImpl rcv)
     {
         TransportDelivery tpDelivery = delivery.getTransportDelivery();
@@ -672,7 +681,7 @@ public class TransportImpl extends EndpointImpl
     {
         if(_connectionEndpoint != null && _isOpenSent && !_isCloseSent)
         {
-            EndpointImpl endpoint = _connectionEndpoint.getTransportHead();
+            Endpoint endpoint = _connectionEndpoint.getTransportHead();
             while(endpoint != null)
             {
                 if(endpoint instanceof ReceiverImpl)
@@ -720,7 +729,7 @@ public class TransportImpl extends EndpointImpl
     {
         if(_connectionEndpoint != null && _isOpenSent && !_isCloseSent)
         {
-            EndpointImpl endpoint = _connectionEndpoint.getTransportHead();
+            Endpoint endpoint = _connectionEndpoint.getTransportHead();
 
             while(endpoint != null)
             {
@@ -840,7 +849,7 @@ public class TransportImpl extends EndpointImpl
     {
         if(_connectionEndpoint != null && _isOpenSent && !_isCloseSent)
         {
-            EndpointImpl endpoint = _connectionEndpoint.getTransportHead();
+            Endpoint endpoint = _connectionEndpoint.getTransportHead();
             while(endpoint != null)
             {
                 if(endpoint instanceof SessionImpl)
@@ -921,7 +930,7 @@ public class TransportImpl extends EndpointImpl
     {
         if(_connectionEndpoint != null && _isOpenSent)
         {
-            EndpointImpl endpoint = _connectionEndpoint.getTransportHead();
+            Endpoint endpoint = _connectionEndpoint.getTransportHead();
             while(endpoint != null)
             {
                 SessionImpl session;
@@ -964,7 +973,7 @@ public class TransportImpl extends EndpointImpl
 
         if(!_closeReceived && (session == null || !session.getTransportSession().endReceived()))
         {
-            EndpointImpl endpoint = _connectionEndpoint.getTransportHead();
+            Endpoint endpoint = _connectionEndpoint.getTransportHead();
             while(endpoint != null)
             {
                 if(endpoint instanceof SenderImpl)
@@ -1140,7 +1149,7 @@ public class TransportImpl extends EndpointImpl
                 return;
             }
             TransportLink<?> transportLink = transportSession.getLinkFromRemoteHandle(handle);
-            LinkImpl link = null;
+            Link link = null;
 
             if(transportLink != null)
             {
@@ -1155,7 +1164,7 @@ public class TransportImpl extends EndpointImpl
                     link = (attach.getRole() == Role.RECEIVER)
                            ? session.sender(attach.getName())
                            : session.receiver(attach.getName());
-                    transportLink = getTransportState(link);
+                    transportLink = getTransportState((LinkImpl)link);
                 }
                 else
                 {

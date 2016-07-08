@@ -30,6 +30,7 @@ import org.apache.qpid.proton.amqp.transport.Disposition;
 import org.apache.qpid.proton.amqp.transport.Flow;
 import org.apache.qpid.proton.amqp.transport.Role;
 import org.apache.qpid.proton.amqp.transport.Transfer;
+import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Event;
 
 class TransportSession
@@ -61,10 +62,10 @@ class TransportSession
     private UnsignedInteger _remoteOutgoingWindow;
     private UnsignedInteger _remoteNextIncomingId = _nextOutgoingId;
     private UnsignedInteger _remoteNextOutgoingId;
-    private final Map<UnsignedInteger, DeliveryImpl>
-            _unsettledIncomingDeliveriesById = new HashMap<UnsignedInteger, DeliveryImpl>();
-    private final Map<UnsignedInteger, DeliveryImpl>
-            _unsettledOutgoingDeliveriesById = new HashMap<UnsignedInteger, DeliveryImpl>();
+    private final Map<UnsignedInteger, Delivery>
+            _unsettledIncomingDeliveriesById = new HashMap<>();
+    private final Map<UnsignedInteger, Delivery>
+            _unsettledOutgoingDeliveriesById = new HashMap<>();
     private int _unsettledIncomingSize;
     private boolean _endReceived;
     private boolean _beginSent;
@@ -261,7 +262,7 @@ class TransportSession
 
     public void handleTransfer(Transfer transfer, Binary payload)
     {
-        DeliveryImpl delivery;
+        Delivery delivery;
         incrementNextIncomingId();
         if(transfer.getDeliveryId() == null || transfer.getDeliveryId().equals(_incomingDeliveryId))
         {
@@ -322,8 +323,8 @@ class TransportSession
         if(!(transfer.getMore() || transfer.getAborted()))
         {
             delivery.setComplete();
-            delivery.getLink().getTransportLink().decrementLinkCredit();
-            delivery.getLink().getTransportLink().incrementDeliveryCount();
+            ((LinkImpl)delivery.getLink()).getTransportLink().decrementLinkCredit();
+            ((LinkImpl)delivery.getLink()).getTransportLink().incrementDeliveryCount();
         }
         if(Boolean.TRUE.equals(transfer.getSettled()))
         {
@@ -405,13 +406,13 @@ class TransportSession
     {
         UnsignedInteger id = disposition.getFirst();
         UnsignedInteger last = disposition.getLast() == null ? id : disposition.getLast();
-        final Map<UnsignedInteger, DeliveryImpl> unsettledDeliveries =
+        final Map<UnsignedInteger, Delivery> unsettledDeliveries =
                 disposition.getRole() == Role.RECEIVER ? _unsettledOutgoingDeliveriesById
                         : _unsettledIncomingDeliveriesById;
 
         while(id.compareTo(last)<=0)
         {
-            DeliveryImpl delivery = unsettledDeliveries.get(id);
+            Delivery delivery = unsettledDeliveries.get(id);
             if(delivery != null)
             {
                 if(disposition.getState() != null)
@@ -432,7 +433,7 @@ class TransportSession
         //TODO - Implement.
     }
 
-    void addUnsettledOutgoing(UnsignedInteger deliveryId, DeliveryImpl delivery)
+    void addUnsettledOutgoing(UnsignedInteger deliveryId, Delivery delivery)
     {
         _unsettledOutgoingDeliveriesById.put(deliveryId, delivery);
     }

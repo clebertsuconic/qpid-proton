@@ -22,15 +22,16 @@
 package org.apache.qpid.proton.engine.impl;
 
 import org.apache.qpid.proton.amqp.UnsignedInteger;
+import org.apache.qpid.proton.engine.Delivery;
 
 public class TransportDelivery
 {
     private UnsignedInteger _deliveryId;
-    private DeliveryImpl _delivery;
+    private Delivery _delivery;
     private TransportLink _transportLink;
     private int _sessionSize = 1;
 
-    TransportDelivery(UnsignedInteger currentDeliveryId, DeliveryImpl delivery, TransportLink transportLink)
+    TransportDelivery(UnsignedInteger currentDeliveryId, Delivery delivery, TransportLink transportLink)
     {
         _deliveryId = currentDeliveryId;
         _delivery = delivery;

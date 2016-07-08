@@ -25,7 +25,7 @@ import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Sender;
 
-public class SenderImpl  extends LinkImpl implements Sender
+public class SenderImpl extends LinkImpl implements Sender
 {
     private int _offered;
     private TransportSender _transportLink;
@@ -99,7 +99,7 @@ public class SenderImpl  extends LinkImpl implements Sender
     }
 
     @Override
-    TransportSender getTransportLink()
+    public TransportSender getTransportLink()
     {
         return _transportLink;
     }

@@ -33,31 +33,31 @@ public interface Session extends Endpoint
     /**
      * Returns a newly created sender endpoint
      */
-    public Sender sender(String name);
+    Sender sender(String name);
 
     /**
      * Returns a newly created receiver endpoint
      */
-    public Receiver receiver(String name);
+    Receiver receiver(String name);
 
-    public Session next(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
+    Session next(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
 
-    public Connection getConnection();
+    Connection getConnection();
 
-    public int getIncomingCapacity();
+    int getIncomingCapacity();
 
-    public void setIncomingCapacity(int bytes);
+    void setIncomingCapacity(int bytes);
 
-    public int getIncomingBytes();
+    int getIncomingBytes();
 
-    public int getOutgoingBytes();
+    int getOutgoingBytes();
 
-    public long getOutgoingWindow();
+    long getOutgoingWindow();
 
     /**
      * Sets the outgoing window size.
      *
      * @param outgoingWindowSize the outgoing window size
      */
-    public void setOutgoingWindow(long outgoingWindowSize);
+    void setOutgoingWindow(long outgoingWindowSize);
 }

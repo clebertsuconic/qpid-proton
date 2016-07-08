@@ -205,12 +205,25 @@ public interface Link extends Endpoint
      */
     Map<Symbol, Object> getRemoteProperties();
 
-    public int drained();
+    int drained();
 
-    public int getRemoteCredit();
-    public boolean getDrain();
+    int getRemoteCredit();
+    boolean getDrain();
 
-    public void detach();
-    public boolean detached();
+    void detach();
+    boolean detached();
+
+    // Clebert: abstract it
+    void setRemoteReceiverSettleMode(ReceiverSettleMode remoteReceiverSettleMode);
+
+    // Clebert: abstract it
+    void setRemoteTarget(Target target);
+
+    // Clebert: abstract it
+    void setRemoteSource(Source source);
+
+    // Clebert: abstract it
+    void setRemoteProperties(Map<Symbol, Object> remoteProperties);
+
 
 }

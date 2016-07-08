@@ -23,11 +23,12 @@ package org.apache.qpid.proton.engine.impl;
 
 import org.apache.qpid.proton.amqp.UnsignedInteger;
 import org.apache.qpid.proton.amqp.transport.Flow;
+import org.apache.qpid.proton.engine.Delivery;
 
 class TransportSender extends TransportLink<SenderImpl>
 {
     private boolean _drain;
-    private DeliveryImpl _inProgressDelivery;
+    private Delivery _inProgressDelivery;
     private static final UnsignedInteger ORIGINAL_DELIVERY_COUNT = UnsignedInteger.ZERO;
 
     TransportSender(SenderImpl link)
@@ -58,12 +59,12 @@ class TransportSender extends TransportLink<SenderImpl>
         setLinkCredit(linkCredit);
     }
 
-    public void setInProgressDelivery(DeliveryImpl inProgressDelivery)
+    public void setInProgressDelivery(Delivery inProgressDelivery)
     {
         _inProgressDelivery = inProgressDelivery;
     }
 
-    public DeliveryImpl getInProgressDelivery()
+    public Delivery getInProgressDelivery()
     {
         return _inProgressDelivery;
     }

@@ -28,6 +28,7 @@ import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.amqp.transport.Target;
+import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Link;
@@ -56,7 +57,7 @@ public abstract class LinkImpl extends EndpointImpl implements Link
     private ReceiverSettleMode _remoteReceiverSettleMode;
 
 
-    private LinkNode<LinkImpl> _node;
+    private LinkNode<Link> _node;
     private boolean _drain;
     private boolean _detached;
     private Map<Symbol, Object> _properties;
@@ -67,7 +68,7 @@ public abstract class LinkImpl extends EndpointImpl implements Link
         _session = session;
         _session.incref();
         _name = name;
-        ConnectionImpl conn = session.getConnectionImpl();
+        Connection conn = session.getConnectionImpl();
         _node = conn.addLinkEndpoint(this);
         conn.put(Event.Type.LINK_INIT, this);
     }
@@ -134,7 +135,7 @@ public abstract class LinkImpl extends EndpointImpl implements Link
         _node = null;
     }
 
-    void modifyEndpoints() {
+    public void modifyEndpoints() {
         modified();
     }
 
@@ -183,7 +184,7 @@ public abstract class LinkImpl extends EndpointImpl implements Link
     }
 
     @Override
-    protected ConnectionImpl getConnectionImpl()
+    protected Connection getConnectionImpl()
     {
         return _session.getConnectionImpl();
     }
@@ -200,7 +201,8 @@ public abstract class LinkImpl extends EndpointImpl implements Link
         return _remoteSource;
     }
 
-    void setRemoteSource(Source source)
+    @Override
+    public void setRemoteSource(Source source)
     {
         _remoteSource = source;
     }
@@ -211,7 +213,8 @@ public abstract class LinkImpl extends EndpointImpl implements Link
         return _remoteTarget;
     }
 
-    void setRemoteTarget(Target target)
+    @Override
+    public void setRemoteTarget(Target target)
     {
         _remoteTarget = target;
     }
@@ -245,9 +248,9 @@ public abstract class LinkImpl extends EndpointImpl implements Link
     @Override
     public Link next(EnumSet<EndpointState> local, EnumSet<EndpointState> remote)
     {
-        LinkNode.Query<LinkImpl> query = new EndpointImplQuery<LinkImpl>(local, remote);
+        LinkNode.Query<Link> query = new EndpointImplQuery(local, remote);
 
-        LinkNode<LinkImpl> linkNode = _node.next(query);
+        LinkNode<Link> linkNode = _node.next(query);
 
         return linkNode == null ? null : linkNode.getValue();
 
@@ -371,7 +374,8 @@ public abstract class LinkImpl extends EndpointImpl implements Link
         return _remoteReceiverSettleMode;
     }
 
-    void setRemoteReceiverSettleMode(ReceiverSettleMode remoteReceiverSettleMode)
+    @Override
+    public void setRemoteReceiverSettleMode(ReceiverSettleMode remoteReceiverSettleMode)
     {
         _remoteReceiverSettleMode = remoteReceiverSettleMode;
     }
@@ -394,7 +398,8 @@ public abstract class LinkImpl extends EndpointImpl implements Link
         return _remoteProperties;
     }
 
-    void setRemoteProperties(Map<Symbol, Object> remoteProperties)
+    @Override
+    public void setRemoteProperties(Map<Symbol, Object> remoteProperties)
     {
         _remoteProperties = remoteProperties;
     }

@@ -21,10 +21,12 @@
 package org.apache.qpid.proton.engine;
 
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.engine.impl.ConnectionImpl;
+import org.apache.qpid.proton.engine.impl.LinkNode;
 import org.apache.qpid.proton.reactor.Reactor;
 import org.apache.qpid.proton.reactor.ReactorChild;
 
@@ -40,7 +42,7 @@ import org.apache.qpid.proton.reactor.ReactorChild;
 public interface Connection extends Endpoint, ReactorChild
 {
 
-    public static final class Factory
+    final class Factory
     {
         public static Connection create() {
             return new ConnectionImpl();
@@ -53,7 +55,7 @@ public interface Connection extends Endpoint, ReactorChild
      * TODO does the Connection's channel-max property limit how many sessions can be created,
      * or opened, or neither?
      */
-    public Session session();
+    Session session();
 
     /**
      * Returns the head of the list of sessions in the specified states.
@@ -65,7 +67,7 @@ public interface Connection extends Endpoint, ReactorChild
      *
      * @see Session#next(EnumSet, EnumSet)
      */
-    public Session sessionHead(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
+    Session sessionHead(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
 
     /**
      * Returns the head of the list of links in the specified states.
@@ -75,7 +77,7 @@ public interface Connection extends Endpoint, ReactorChild
      *
      * @see Link#next(EnumSet, EnumSet)
      */
-    public Link linkHead(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
+    Link linkHead(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
 
     /**
      * Returns the head of the delivery work list. The delivery work list consists of
@@ -86,11 +88,11 @@ public interface Connection extends Endpoint, ReactorChild
      * @see Delivery#settle()
      * @see Delivery#getWorkNext()
      */
-    public Delivery getWorkHead();
+    Delivery getWorkHead();
 
-    public void setContainer(String container);
+    void setContainer(String container);
 
-    public String getContainer();
+    String getContainer();
 
     /**
      * Set the name of the host (either fully qualified or relative) to which
@@ -103,13 +105,13 @@ public interface Connection extends Endpoint, ReactorChild
      *
      * @param hostname the RFC1035 compliant host name.
      */
-    public void setHostname(String hostname);
+    void setHostname(String hostname);
 
-    public String getHostname();
+    String getHostname();
 
-    public String getRemoteContainer();
+    String getRemoteContainer();
 
-    public String getRemoteHostname();
+    String getRemoteHostname();
 
     void setOfferedCapabilities(Symbol[] capabilities);
 
@@ -134,4 +136,47 @@ public interface Connection extends Endpoint, ReactorChild
     Transport getTransport();
 
     Reactor getReactor();
+
+    // Clebert: Added to abstract
+    Event put(Event.Type type, Object context);
+
+    // Clebert: Added to abstract
+    void addModified(Endpoint endpoint);
+
+    // Clebert: Added to abstract
+    void removeModified(Endpoint endpoint);
+
+    // Clebert: Added to abstract
+    LinkNode<Link> addLinkEndpoint(Link endpoint);
+
+    // Clebert: Added to abstract
+    void removeLinkEndpoint(LinkNode<Link> node);
+
+    // TODO-now: collection candidate
+    void removeTransportWork(Delivery delivery);
+
+    // TODO-now: collection candidate
+    void addTransportWork(Delivery delivery);
+
+    // Cebert: Added to make it abstract
+    void removeWork(Delivery delivery);
+
+    // Cebert: Added to make it abstract
+    void addWork(Delivery delivery);
+
+    // Clebert: Added to make it abstract
+    void workUpdate(Delivery delivery);
+
+    // TODO-now: remove this, use iterator
+    Iterator<Delivery> getWorkSequence();
+
+    // TODO-now: Maybe some other internal abstract class
+    void freeSession(Session session);
+
+    // TODO-now: remove this by regular collections
+    void removeSessionEndpoint(LinkNode<Session> node);
+
+    // TODO-now: remove this by regular collections
+    LinkNode<Session> addSessionEndpoint(Session endpoint);
+
 }

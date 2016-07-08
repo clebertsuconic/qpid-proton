@@ -77,4 +77,39 @@ public interface Endpoint extends Extendable
      */
     Object getContext();
 
+
+    void incref();
+
+    void decref();
+
+    void modifyEndpoints();
+
+    // Clebert: to make it abstract
+    void modified();
+
+    // Clebert: to make it abstract
+    void clearModified();
+
+    // Clebert: to make it abstract
+    void modified(boolean emit);
+
+    // Clebert: to make it abstract
+    void setLocalState(EndpointState localState);
+
+    // Clebert: to make it abstract
+    void setRemoteState(EndpointState remoteState);
+
+    // TODO-now remove these by regular linked lists.
+    Endpoint transportNext();
+
+    // TODO-now remove these by regular linked lists.
+    Endpoint transportPrev();
+
+    // TODO-now: Remove this, no API reason to keep it
+    void setTransportNext(Endpoint transportNext);
+
+    // TODO-now: Remove this, no API reason to keep it
+    void setTransportPrev(Endpoint transportPrevious);
+
+
 }

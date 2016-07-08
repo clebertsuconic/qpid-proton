@@ -21,6 +21,7 @@
 package org.apache.qpid.proton.engine;
 
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
+import org.apache.qpid.proton.engine.impl.TransportDelivery;
 
 /**
  * A delivery of a message on a particular link.
@@ -31,20 +32,20 @@ import org.apache.qpid.proton.amqp.transport.DeliveryState;
 public interface Delivery extends Extendable
 {
 
-    public byte[] getTag();
+    byte[] getTag();
 
-    public Link getLink();
+    Link getLink();
 
-    public DeliveryState getLocalState();
+    DeliveryState getLocalState();
 
-    public DeliveryState getRemoteState();
+    DeliveryState getRemoteState();
 
     /**
      * updates the state of the delivery
      *
      * @param state the new delivery state
      */
-    public void disposition(DeliveryState state);
+    void disposition(DeliveryState state);
 
     /**
      * Settles this delivery.
@@ -52,7 +53,7 @@ public interface Delivery extends Extendable
      * Causes the delivery to be removed from the connection's work list (see {@link Connection#getWorkHead()}).
      * If this delivery is its link's current delivery, the link's current delivery pointer is advanced.
      */
-    public void settle();
+    void settle();
 
     /**
      * Returns whether this delivery has been settled.
@@ -61,49 +62,54 @@ public interface Delivery extends Extendable
      *
      * @see #settle()
      */
-    public boolean isSettled();
+    boolean isSettled();
 
-    public boolean remotelySettled();
+    boolean remotelySettled();
 
     /**
      * TODO When does an application call this method?  Do we really need this?
      */
-    public void free();
+    void free();
 
     /**
+     * TODO-now: remove this, use collections
      * @see Connection#getWorkHead()
      */
-    public Delivery getWorkNext();
+    Delivery getWorkNext();
 
-    public Delivery next();
+    // TODO-now: remove this, use collections
+    Delivery getWorkPrev();
 
-    public boolean isWritable();
+    // TODO-now: remove this, use collections
+    Delivery next();
+
+    boolean isWritable();
 
     /**
      * Returns whether this delivery has data ready to be received.
      *
      * @see Receiver#recv(byte[], int, int)
      */
-    public boolean isReadable();
+    boolean isReadable();
 
-    public void setContext(Object o);
+    void setContext(Object o);
 
-    public Object getContext();
+    Object getContext();
 
     /**
      * Returns whether this delivery's state or settled flag has ever remotely changed.
      *
      * TODO what is the main intended use case for calling this method?
      */
-    public boolean isUpdated();
+    boolean isUpdated();
 
-    public void clear();
+    void clear();
 
-    public boolean isPartial();
+    boolean isPartial();
 
-    public int pending();
+    int pending();
 
-    public boolean isBuffered();
+    boolean isBuffered();
 
     /**
      * Configures a default DeliveryState to be used if a
@@ -112,9 +118,9 @@ public interface Delivery extends Extendable
      *
      * @param state the default delivery state
      */
-    public void setDefaultDeliveryState(DeliveryState state);
+    void setDefaultDeliveryState(DeliveryState state);
 
-    public DeliveryState getDefaultDeliveryState();
+    DeliveryState getDefaultDeliveryState();
 
     /**
      * Sets the message-format for this Delivery, representing the 32bit value using an int.
@@ -133,7 +139,7 @@ public interface Delivery extends Extendable
      *
      * @param messageFormat the message format
      */
-    public void setMessageFormat(int messageFormat);
+    void setMessageFormat(int messageFormat);
 
     /**
      * Gets the message-format for this Delivery, representing the 32bit value using an int.
@@ -141,6 +147,84 @@ public interface Delivery extends Extendable
      * @return the message-format
      * @see #setMessageFormat(int)
      */
-    public int getMessageFormat();
+    int getMessageFormat();
+
+    // TODO-now: use collections
+    void setWorkNext(Delivery workNext);
+
+    // TODO-now: use collections
+    void setWorkPrev(Delivery workPrev);
+
+    // clebert: added to abstract
+    boolean isWork();
+
+    // clebert: added to abstract
+    void setWork(boolean _work);
+
+    // clebert: added to abstract
+    boolean isTransportWork();
+
+    // clebert: added to abstract
+    void setTransportWork(boolean work);
+
+    // clebert: added to abstract
+    void updateWork();
+
+    // clebert: added to abstract
+    TransportDelivery getTransportDelivery();
+
+    // clebert: added to abstract
+    void setTransportDelivery(TransportDelivery transportDelivery);
+
+    // clebert: added to abstract
+    void setDone();
+
+    // clebert: added to abstract
+    boolean isDone();
+
+    // clebert: added to abstract
+    int getDataOffset();
+
+    // clebert: added to abstract
+    int getDataLength();
+
+    // clebert: added to abstract
+    void setData(byte[] data);
+
+    // clebert: added to abstract
+    void setDataLength(int length);
+
+    // clebert: added to abstract
+    void setDataOffset(int arrayOffset);
+
+    // clebert: added to abstract
+    void setComplete();
+
+    // clebert: added to abstract
+    void setRemoteDeliveryState(DeliveryState remoteDeliveryState);
+
+    // clebert: added to abstract
+    void setRemoteSettled(boolean remoteSettled);
+
+    byte[] getData();
+
+    // TODO-now: use collections
+    void setTransportWorkNext(Delivery transportWorkNext);
+
+    // TODO-now: use collections
+    void setTransportWorkPrev(Delivery transportWorkPrev);
+
+
+    Delivery clearTransportWork();
+
+    // TODO-now: use collection
+    Delivery getTransportWorkNext();
+
+    // TODO-now: use collection
+    Delivery getTransportWorkPrev();
+
+
+
+
 
 }

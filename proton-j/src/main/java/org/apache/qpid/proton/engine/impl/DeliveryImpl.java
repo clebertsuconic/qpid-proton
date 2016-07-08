@@ -34,12 +34,18 @@ public class DeliveryImpl implements Delivery
     private DeliveryImpl _linkPrevious;
     private DeliveryImpl _linkNext;
 
-    private DeliveryImpl _workNext;
-    private DeliveryImpl _workPrev;
+    // TODO-now: use collections
+    private Delivery _workNext;
+    // TODO-now: use collections
+    private Delivery _workPrev;
+
     boolean _work;
 
-    private DeliveryImpl _transportWorkNext;
-    private DeliveryImpl _transportWorkPrev;
+    // TODO-now: use collections
+    private Delivery _transportWorkNext;
+    // TODO-now: use collections
+    private Delivery _transportWorkPrev;
+
     boolean _transportWork;
 
     private Record _attachments;
@@ -79,6 +85,30 @@ public class DeliveryImpl implements Delivery
             previous._linkNext = this;
         }
     }
+
+
+    // clebert: added to abstract
+    public boolean isWork() {
+        return _work;
+    }
+
+    // clebert: added to abstract
+    public void setWork(boolean work) {
+        this._work = work;
+    }
+
+
+    // clebert: added to abstract
+    public boolean isTransportWork() {
+        return _transportWork;
+    }
+
+    // clebert: added to abstract
+    public void setTransportWork(boolean work) {
+        this._transportWork = work;
+    }
+
+
 
     public byte[] getTag()
     {
@@ -179,7 +209,8 @@ public class DeliveryImpl implements Delivery
         return _linkPrevious;
     }
 
-    public DeliveryImpl getWorkNext()
+    // TODO-now: use collections
+    public Delivery getWorkNext()
     {
         if (_workNext != null)
             return _workNext;
@@ -189,18 +220,20 @@ public class DeliveryImpl implements Delivery
         return null;
     }
 
-    DeliveryImpl getWorkPrev()
+    // TODO-now: use collections
+    public Delivery getWorkPrev()
     {
         return _workPrev;
     }
 
-
-    void setWorkNext(DeliveryImpl workNext)
+    // TODO-now: Use Collections
+    public void setWorkNext(Delivery workNext)
     {
         _workNext = workNext;
     }
 
-    void setWorkPrev(DeliveryImpl workPrev)
+    // TODO-now: Use Collections
+    public void setWorkPrev(Delivery workPrev)
     {
         _workPrev = workPrev;
     }
@@ -225,14 +258,15 @@ public class DeliveryImpl implements Delivery
         return (_complete && consumed == 0) ? Transport.END_OF_STREAM : consumed;  //TODO - Implement
     }
 
-    void updateWork()
+    public void updateWork()
     {
         getLink().getConnectionImpl().workUpdate(this);
     }
 
-    DeliveryImpl clearTransportWork()
+    // TODO-now: collection on Transport or whatever that is
+    public Delivery clearTransportWork()
     {
-        DeliveryImpl next = _transportWorkNext;
+        Delivery next = _transportWorkNext;
         getLink().getConnectionImpl().removeTransportWork(this);
         return next;
     }
@@ -242,34 +276,36 @@ public class DeliveryImpl implements Delivery
         getLink().getConnectionImpl().addTransportWork(this);
     }
 
-
-    DeliveryImpl getTransportWorkNext()
+    // TODO-now: use collection
+    public Delivery getTransportWorkNext()
     {
         return _transportWorkNext;
     }
 
-
-    DeliveryImpl getTransportWorkPrev()
+    // TODO-now: use collection
+    public Delivery getTransportWorkPrev()
     {
         return _transportWorkPrev;
     }
 
-    void setTransportWorkNext(DeliveryImpl transportWorkNext)
+    // TODO-now: use collections
+    public void setTransportWorkNext(Delivery transportWorkNext)
     {
         _transportWorkNext = transportWorkNext;
     }
 
-    void setTransportWorkPrev(DeliveryImpl transportWorkPrev)
+    // TODO-now: use collections
+    public void setTransportWorkPrev(Delivery transportWorkPrev)
     {
         _transportWorkPrev = transportWorkPrev;
     }
 
-    TransportDelivery getTransportDelivery()
+    public TransportDelivery getTransportDelivery()
     {
         return _transportDelivery;
     }
 
-    void setTransportDelivery(TransportDelivery transportDelivery)
+    public void setTransportDelivery(TransportDelivery transportDelivery)
     {
         _transportDelivery = transportDelivery;
     }
@@ -298,31 +334,36 @@ public class DeliveryImpl implements Delivery
         return length;  //TODO - Implement.
     }
 
-    byte[] getData()
+    public byte[] getData()
     {
         return _data;
     }
 
-    int getDataOffset()
+    @Override
+    public int getDataOffset()
     {
         return _offset;
     }
 
-    int getDataLength()
+    @Override
+    public int getDataLength()
     {
         return _dataSize;  //TODO - Implement.
     }
 
-    void setData(byte[] data)
+    @Override
+    public void setData(byte[] data)
     {
         _data = data;
     }
 
-    void setDataLength(int length)
+    @Override
+    public void setDataLength(int length)
     {
         _dataSize = length;
     }
 
+    @Override
     public void setDataOffset(int arrayOffset)
     {
         _offset = arrayOffset;
@@ -341,7 +382,7 @@ public class DeliveryImpl implements Delivery
             && getLink().current() == this;
     }
 
-    void setComplete()
+    public void setComplete()
     {
         _complete = true;
     }
@@ -351,7 +392,7 @@ public class DeliveryImpl implements Delivery
         return !_complete;
     }
 
-    void setRemoteDeliveryState(DeliveryState remoteDeliveryState)
+    public void setRemoteDeliveryState(DeliveryState remoteDeliveryState)
     {
         _remoteDeliveryState = remoteDeliveryState;
         _updated = true;
@@ -369,17 +410,19 @@ public class DeliveryImpl implements Delivery
     }
 
 
-    void setDone()
+    @Override
+    public void setDone()
     {
         _done = true;
     }
 
-    boolean isDone()
+    @Override
+    public boolean isDone()
     {
         return _done;
     }
 
-    void setRemoteSettled(boolean remoteSettled)
+    public void setRemoteSettled(boolean remoteSettled)
     {
         _remoteSettled = remoteSettled;
         _updated = true;
