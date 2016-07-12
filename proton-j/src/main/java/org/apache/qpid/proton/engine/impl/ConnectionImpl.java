@@ -36,18 +36,11 @@ import org.apache.qpid.proton.engine.ProtonJConnection;
 import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.reactor.Reactor;
 
-public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
+public class ConnectionImpl extends StateConnection
 {
-    public static final int MAX_CHANNELS = 65535;
 
-    private List<SessionImpl> _sessions = new ArrayList<SessionImpl>();
     private EndpointImpl _transportTail;
     private EndpointImpl _transportHead;
-    private int _maxChannels = MAX_CHANNELS;
-
-    private LinkNode<SessionImpl> _sessionHead;
-    private LinkNode<SessionImpl> _sessionTail;
-
 
     private LinkNode<LinkImpl> _linkHead;
     private LinkNode<LinkImpl> _linkTail;
@@ -59,20 +52,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     private TransportImpl _transport;
     private DeliveryImpl _transportWorkHead;
     private DeliveryImpl _transportWorkTail;
-    private int _transportWorkSize = 0;
-    private String _localContainerId = "";
-    private String _localHostname;
-    private String _remoteContainer;
-    private String _remoteHostname;
-    private Symbol[] _offeredCapabilities;
-    private Symbol[] _desiredCapabilities;
-    private Symbol[] _remoteOfferedCapabilities;
-    private Symbol[] _remoteDesiredCapabilities;
-    private Map<Symbol, Object> _properties;
-    private Map<Symbol, Object> _remoteProperties;
 
-    private Object _context;
-    private CollectorImpl _collector;
     private Reactor _reactor;
 
     private static final Symbol[] EMPTY_SYMBOL_ARRAY = new Symbol[0];
@@ -638,7 +618,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         }
     }
 
-    EventImpl put(Event.Type type, Object context)
+    Event put(Event.Type type, Object context)
     {
         if (_collector != null) {
             return _collector.put(type, context);

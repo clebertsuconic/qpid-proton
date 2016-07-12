@@ -42,4 +42,6 @@ public interface Collector
     void pop();
 
     boolean more();
+
+    Event put(EventType type, Object context);
 }
