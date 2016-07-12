@@ -30,10 +30,11 @@ import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.ProtonJSession;
 import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.machine.StateConnection;
 
 public class SessionImpl extends EndpointImpl implements ProtonJSession
 {
-    private final ConnectionImpl _connection;
+    private final StateConnection _connection;
 
     private Map<String, SenderImpl> _senders = new LinkedHashMap<String, SenderImpl>();
     private Map<String, ReceiverImpl>  _receivers = new LinkedHashMap<String, ReceiverImpl>();
@@ -49,7 +50,7 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     private LinkNode<SessionImpl> _node;
 
 
-    SessionImpl(ConnectionImpl connection)
+    public SessionImpl(StateConnection connection)
     {
         _connection = connection;
         _connection.incref();
@@ -114,25 +115,25 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     }
 
     @Override
-    protected ConnectionImpl getConnectionImpl()
+    protected StateConnection getConnectionImpl()
     {
         return _connection;
     }
 
     @Override
-    public ConnectionImpl getConnection()
+    public StateConnection getConnection()
     {
         return getConnectionImpl();
     }
 
     @Override
-    void postFinal() {
+    protected void postFinal() {
         _connection.put(Event.Type.SESSION_FINAL, this);
         _connection.decref();
     }
 
     @Override
-    void doFree() {
+    protected void doFree() {
         _connection.freeSession(this);
         _connection.removeSessionEndpoint(_node);
         _node = null;
@@ -259,13 +260,13 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     }
 
     @Override
-    void localOpen()
+    protected void localOpen()
     {
         getConnectionImpl().put(Event.Type.SESSION_LOCAL_OPEN, this);
     }
 
     @Override
-    void localClose()
+    protected void localClose()
     {
         getConnectionImpl().put(Event.Type.SESSION_LOCAL_CLOSE, this);
     }

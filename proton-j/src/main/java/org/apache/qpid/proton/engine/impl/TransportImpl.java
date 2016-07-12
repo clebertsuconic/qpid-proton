@@ -59,6 +59,7 @@ import org.apache.qpid.proton.engine.TransportResult;
 import org.apache.qpid.proton.engine.TransportResultFactory;
 import org.apache.qpid.proton.engine.impl.ssl.SslImpl;
 import org.apache.qpid.proton.framing.TransportFrame;
+import org.apache.qpid.proton.machine.AMQPMachine;
 import org.apache.qpid.proton.reactor.Reactor;
 import org.apache.qpid.proton.reactor.Selectable;
 
@@ -85,7 +86,10 @@ public class TransportImpl extends EndpointImpl
 
     private FrameParser _frameParser;
 
+    // TODO: remove
     private ConnectionImpl _connectionEndpoint;
+
+    private final AMQPMachine machine = new AMQPMachine();
 
     private boolean _isOpenSent;
     private boolean _isCloseSent;
@@ -1032,10 +1036,10 @@ public class TransportImpl extends EndpointImpl
     }
 
     @Override
-    void postFinal() {}
+    protected void postFinal() {}
 
     @Override
-    void doFree() { }
+    protected void doFree() { }
 
     //==================================================================================================================
     // handle incoming amqp data
@@ -1634,10 +1638,10 @@ public class TransportImpl extends EndpointImpl
     }
 
     @Override
-    void localOpen() {}
+    protected void localOpen() {}
 
     @Override
-    void localClose() {}
+    protected void localClose() {}
 
     public void setSelectable(Selectable selectable) {
         _selectable = selectable;

@@ -44,7 +44,7 @@ import org.apache.qpid.proton.reactor.impl.ReactorImpl;
  *
  */
 
-class EventImpl implements Event
+public class EventImpl implements Event
 {
 
     EventType type;

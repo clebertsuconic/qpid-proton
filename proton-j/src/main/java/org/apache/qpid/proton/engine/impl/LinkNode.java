@@ -21,7 +21,7 @@ package org.apache.qpid.proton.engine.impl;
 */
 
 
-class LinkNode<E>
+public class LinkNode<E>
 {
     public interface Query<T>
     {

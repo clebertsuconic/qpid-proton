@@ -21,6 +21,7 @@
 package org.apache.qpid.proton.engine;
 
 import org.apache.qpid.proton.engine.impl.CollectorImpl;
+import org.apache.qpid.proton.engine.impl.EventImpl;
 
 /**
  * Collector
@@ -42,4 +43,6 @@ public interface Collector
     void pop();
 
     boolean more();
+
+    EventImpl put(EventType type, Object context);
 }

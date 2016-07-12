@@ -17,6 +17,38 @@
 
 package org.apache.qpid.proton.machine;
 
+import org.apache.qpid.proton.engine.Connection;
+import org.apache.qpid.proton.engine.EndpointState;
+import org.apache.qpid.proton.engine.Event;
+import org.apache.qpid.proton.engine.impl.ConnectionImpl;
+
 public class AMQPMachine {
+
+
+   private ConnectionImpl _connectionEndpoint;
+
+
+
+   public void bind(ConnectionImpl conn)
+   {
+      // TODO - check if already bound
+
+      this._connectionEndpoint =  conn;
+      _connectionEndpoint.put(Event.Type.CONNECTION_BOUND, conn);
+      _connectionEndpoint.setTransport(this);
+      _connectionEndpoint.incref();
+
+      if(getRemoteState() != EndpointState.UNINITIALIZED)
+      {
+         _connectionEndpoint.handleOpen(_open);
+         if(getRemoteState() == EndpointState.CLOSED)
+         {
+            _connectionEndpoint.setRemoteState(EndpointState.CLOSED);
+         }
+
+         _frameParser.flush();
+      }
+   }
+
 
 }

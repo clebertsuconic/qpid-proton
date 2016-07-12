@@ -34,27 +34,11 @@ import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.ProtonJConnection;
 import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.machine.StateConnection;
 import org.apache.qpid.proton.reactor.Reactor;
 
-public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
+public class ConnectionImpl extends StateConnection
 {
-    public static final int MAX_CHANNELS = 65535;
-
-    private List<SessionImpl> _sessions = new ArrayList<SessionImpl>();
-    private EndpointImpl _transportTail;
-    private EndpointImpl _transportHead;
-    private int _maxChannels = MAX_CHANNELS;
-
-    private LinkNode<SessionImpl> _sessionHead;
-    private LinkNode<SessionImpl> _sessionTail;
-
-
-    private LinkNode<LinkImpl> _linkHead;
-    private LinkNode<LinkImpl> _linkTail;
-
-
-    private DeliveryImpl _workHead;
-    private DeliveryImpl _workTail;
 
     private TransportImpl _transport;
     private DeliveryImpl _transportWorkHead;
@@ -72,7 +56,6 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     private Map<Symbol, Object> _remoteProperties;
 
     private Object _context;
-    private CollectorImpl _collector;
     private Reactor _reactor;
 
     private static final Symbol[] EMPTY_SYMBOL_ARRAY = new Symbol[0];
@@ -85,50 +68,14 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     {
     }
 
-    @Override
-    public SessionImpl session()
-    {
-        SessionImpl session = new SessionImpl(this);
-        _sessions.add(session);
 
-
-        return session;
-    }
-
-    void freeSession(SessionImpl session)
-    {
-        _sessions.remove(session);
-    }
-
-    protected LinkNode<SessionImpl> addSessionEndpoint(SessionImpl endpoint)
-    {
-        LinkNode<SessionImpl> node;
-        if(_sessionHead == null)
-        {
-            node = _sessionHead = _sessionTail = LinkNode.newList(endpoint);
+    public void modified(boolean emit) {
+        TransportImpl trans = getTransport();
+        if (trans != null) {
+            put(Event.Type.TRANSPORT, trans);
         }
-        else
-        {
-            node = _sessionTail = _sessionTail.addAtTail(endpoint);
-        }
-        return node;
     }
-
-    void removeSessionEndpoint(LinkNode<SessionImpl> node)
-    {
-        LinkNode<SessionImpl> prev = node.getPrev();
-        LinkNode<SessionImpl> next = node.getNext();
-
-        if(_sessionHead == node)
-        {
-            _sessionHead = next;
-        }
-        if(_sessionTail == node)
-        {
-            _sessionTail = prev;
-        }
-        node.remove();
-    }
+}
 
 
     protected LinkNode<LinkImpl> addLinkEndpoint(LinkImpl endpoint)
@@ -200,12 +147,12 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     }
 
     @Override
-    void postFinal() {
+    protected void postFinal() {
         put(Event.Type.CONNECTION_FINAL, this);
     }
 
     @Override
-    void doFree() {
+    protected void doFree() {
         List<SessionImpl> sessions = new ArrayList<SessionImpl>(_sessions);
         for(Session session : sessions) {
             session.free();
@@ -213,7 +160,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         _sessions = null;
     }
 
-    void modifyEndpoints() {
+    protected void modifyEndpoints() {
         if (_sessions != null) {
             for (SessionImpl ssn: _sessions) {
                 ssn.modifyEndpoints();
@@ -224,7 +171,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         }
     }
 
-    void handleOpen(Open open)
+    protected void handleOpen(Open open)
     {
         // TODO - store state
         setRemoteState(EndpointState.ACTIVE);
@@ -237,52 +184,14 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     }
 
 
-    EndpointImpl getTransportHead()
+    protected EndpointImpl getTransportHead()
     {
         return _transportHead;
     }
 
-    EndpointImpl getTransportTail()
+    protected EndpointImpl getTransportTail()
     {
         return _transportTail;
-    }
-
-    void addModified(EndpointImpl endpoint)
-    {
-        if(_transportTail == null)
-        {
-            endpoint.setTransportNext(null);
-            endpoint.setTransportPrev(null);
-            _transportHead = _transportTail = endpoint;
-        }
-        else
-        {
-            _transportTail.setTransportNext(endpoint);
-            endpoint.setTransportPrev(_transportTail);
-            _transportTail = endpoint;
-            _transportTail.setTransportNext(null);
-        }
-    }
-
-    void removeModified(EndpointImpl endpoint)
-    {
-        if(_transportHead == endpoint)
-        {
-            _transportHead = endpoint.transportNext();
-        }
-        else
-        {
-            endpoint.transportPrev().setTransportNext(endpoint.transportNext());
-        }
-
-        if(_transportTail == endpoint)
-        {
-            _transportTail = endpoint.transportPrev();
-        }
-        else
-        {
-            endpoint.transportNext().setTransportPrev(endpoint.transportPrev());
-        }
     }
 
     @Override
@@ -621,7 +530,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     @Override
     public void collect(Collector collector)
     {
-        _collector = (CollectorImpl) collector;
+        _collector =  collector;
 
         put(Event.Type.CONNECTION_INIT, this);
 
@@ -638,23 +547,14 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         }
     }
 
-    EventImpl put(Event.Type type, Object context)
-    {
-        if (_collector != null) {
-            return _collector.put(type, context);
-        } else {
-            return null;
-        }
-    }
-
     @Override
-    void localOpen()
+    protected void localOpen()
     {
         put(Event.Type.CONNECTION_LOCAL_OPEN, this);
     }
 
     @Override
-    void localClose()
+    protected void localClose()
     {
         put(Event.Type.CONNECTION_LOCAL_CLOSE, this);
     }
