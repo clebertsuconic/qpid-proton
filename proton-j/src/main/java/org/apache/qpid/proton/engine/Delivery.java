@@ -50,7 +50,7 @@ public interface Delivery extends Extendable
     /**
      * Settles this delivery.
      *
-     * Causes the delivery to be removed from the connection's work list (see {@link Connection#getWorkHead()}).
+     * Causes the delivery to be removed from the connection's work list.
      * If this delivery is its link's current delivery, the link's current delivery pointer is advanced.
      */
     void settle();
@@ -70,15 +70,6 @@ public interface Delivery extends Extendable
      * TODO When does an application call this method?  Do we really need this?
      */
     void free();
-
-    /**
-     * TODO-now: remove this, use collections
-     * @see Connection#getWorkHead()
-     */
-    Delivery getWorkNext();
-
-    // TODO-now: remove this, use collections
-    Delivery getWorkPrev();
 
     // TODO-now: remove this, use collections
     Delivery next();
@@ -149,12 +140,6 @@ public interface Delivery extends Extendable
      */
     int getMessageFormat();
 
-    // TODO-now: use collections
-    void setWorkNext(Delivery workNext);
-
-    // TODO-now: use collections
-    void setWorkPrev(Delivery workPrev);
-
     // clebert: added to abstract
     boolean isWork();
 
@@ -208,23 +193,7 @@ public interface Delivery extends Extendable
 
     byte[] getData();
 
-    // TODO-now: use collections
-    void setTransportWorkNext(Delivery transportWorkNext);
-
-    // TODO-now: use collections
-    void setTransportWorkPrev(Delivery transportWorkPrev);
-
-
-    Delivery clearTransportWork();
-
-    // TODO-now: use collection
-    Delivery getTransportWorkNext();
-
-    // TODO-now: use collection
-    Delivery getTransportWorkPrev();
-
-
-
+    void clearTransportWork();
 
 
 }

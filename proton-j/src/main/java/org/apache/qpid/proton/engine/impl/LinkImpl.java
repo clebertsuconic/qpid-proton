@@ -20,7 +20,7 @@
  */
 package org.apache.qpid.proton.engine.impl;
 
-import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.apache.qpid.proton.amqp.Symbol;
@@ -29,7 +29,7 @@ import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.engine.Connection;
-import org.apache.qpid.proton.engine.EndpointState;
+import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Link;
 
@@ -41,6 +41,7 @@ public abstract class LinkImpl extends EndpointImpl implements Link
     DeliveryImpl _head;
     DeliveryImpl _tail;
     DeliveryImpl _current;
+
     private String _name;
     private Source _source;
     private Source _remoteSource;

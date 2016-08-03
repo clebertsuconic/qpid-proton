@@ -22,6 +22,7 @@ import static org.apache.qpid.proton.engine.impl.ByteBufferUtils.pourBufferToArr
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.qpid.proton.amqp.Binary;
@@ -497,21 +498,16 @@ public class TransportImpl extends EndpointImpl
     {
         if(_connectionEndpoint != null && _isOpenSent && !_isCloseSent)
         {
-            Delivery delivery = _connectionEndpoint.getTransportWorkHead();
-            while(delivery != null)
-            {
+            for (Iterator<Delivery> iterator = _connectionEndpoint.getTransportWork().iterator(); iterator.hasNext();) {
+                Delivery delivery = iterator.next();
                 Link link = delivery.getLink();
                 if (link instanceof SenderImpl) {
                     if (processTransportWorkSender(delivery, (SenderImpl) link)) {
-                        delivery = delivery.clearTransportWork();
-                    } else {
-                        delivery = delivery.getTransportWorkNext();
+                        iterator.remove();
                     }
                 } else {
                     if (processTransportWorkReceiver(delivery, (ReceiverImpl) link)) {
-                        delivery = delivery.clearTransportWork();
-                    } else {
-                        delivery = delivery.getTransportWorkNext();
+                        iterator.remove();
                     }
                 }
             }

@@ -34,18 +34,7 @@ public class DeliveryImpl implements Delivery
     private DeliveryImpl _linkPrevious;
     private DeliveryImpl _linkNext;
 
-    // TODO-now: use collections
-    private Delivery _workNext;
-    // TODO-now: use collections
-    private Delivery _workPrev;
-
     boolean _work;
-
-    // TODO-now: use collections
-    private Delivery _transportWorkNext;
-    // TODO-now: use collections
-    private Delivery _transportWorkPrev;
-
     boolean _transportWork;
 
     private Record _attachments;
@@ -209,34 +198,6 @@ public class DeliveryImpl implements Delivery
         return _linkPrevious;
     }
 
-    // TODO-now: use collections
-    public Delivery getWorkNext()
-    {
-        if (_workNext != null)
-            return _workNext;
-        // the following hack is brought to you by the C implementation!
-        if (!_work)  // not on the work list
-            return _link.getConnectionImpl().getWorkHead();
-        return null;
-    }
-
-    // TODO-now: use collections
-    public Delivery getWorkPrev()
-    {
-        return _workPrev;
-    }
-
-    // TODO-now: Use Collections
-    public void setWorkNext(Delivery workNext)
-    {
-        _workNext = workNext;
-    }
-
-    // TODO-now: Use Collections
-    public void setWorkPrev(Delivery workPrev)
-    {
-        _workPrev = workPrev;
-    }
 
     int recv(byte[] bytes, int offset, int size)
     {
@@ -258,46 +219,20 @@ public class DeliveryImpl implements Delivery
         return (_complete && consumed == 0) ? Transport.END_OF_STREAM : consumed;  //TODO - Implement
     }
 
+    // TODO: this is better on Transport or ConnectionImpl
     public void updateWork()
     {
         getLink().getConnectionImpl().workUpdate(this);
     }
 
-    // TODO-now: collection on Transport or whatever that is
-    public Delivery clearTransportWork()
+    // TODO: this is better on Transport or ConnectionImpl
+    public void clearTransportWork()
     {
-        Delivery next = _transportWorkNext;
-        getLink().getConnectionImpl().removeTransportWork(this);
-        return next;
     }
 
     void addToTransportWorkList()
     {
         getLink().getConnectionImpl().addTransportWork(this);
-    }
-
-    // TODO-now: use collection
-    public Delivery getTransportWorkNext()
-    {
-        return _transportWorkNext;
-    }
-
-    // TODO-now: use collection
-    public Delivery getTransportWorkPrev()
-    {
-        return _transportWorkPrev;
-    }
-
-    // TODO-now: use collections
-    public void setTransportWorkNext(Delivery transportWorkNext)
-    {
-        _transportWorkNext = transportWorkNext;
-    }
-
-    // TODO-now: use collections
-    public void setTransportWorkPrev(Delivery transportWorkPrev)
-    {
-        _transportWorkPrev = transportWorkPrev;
     }
 
     public TransportDelivery getTransportDelivery()

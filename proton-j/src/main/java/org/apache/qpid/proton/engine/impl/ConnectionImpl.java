@@ -21,6 +21,7 @@
 package org.apache.qpid.proton.engine.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -51,16 +52,12 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
 
 
     private final LinkedHashSet<Session> sessions = new LinkedHashSet<>();
+
     private final LinkedHashSet<Link> links = new LinkedHashSet<>();
 
+    private final LinkedHashSet<Delivery> deliveryWork = new LinkedHashSet<>();
 
-    // TODO-now: use Collections here
-    private Delivery _workHead;
-    private Delivery _workTail;
-
-    // TODO-now: use Collections here
-    private Delivery _transportWorkHead;
-    private Delivery _transportWorkTail;
+    private final LinkedHashSet<Delivery> transportWork = new LinkedHashSet<>();
 
     private TransportImpl _transport;
 
@@ -88,6 +85,14 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
      */
     @Deprecated public ConnectionImpl()
     {
+    }
+
+    public Collection<Delivery> getTransportWork() {
+        return transportWork;
+    }
+
+    public Collection<Delivery> getDeliveryWork() {
+        return deliveryWork;
     }
 
     @Override
@@ -252,7 +257,12 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     @Override
     public Delivery getWorkHead()
     {
-        return _workHead;
+        try {
+            return deliveryWork.iterator().next();
+        }
+        catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
@@ -374,28 +384,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     {
         if (!delivery.isWork()) return;
 
-        Delivery next = delivery.getWorkNext();
-        Delivery prev = delivery.getWorkPrev();
-
-        if (prev != null) {
-            prev.setWorkNext(next);
-        }
-
-        if (next != null) {
-            next.setWorkPrev(prev);
-        }
-
-
-        if(_workHead == delivery)
-        {
-            _workHead = next;
-
-        }
-
-        if(_workTail == delivery)
-        {
-            _workTail = prev;
-        }
+        deliveryWork.remove(delivery);
 
         delivery.setWork(false);
     }
@@ -405,25 +394,14 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     {
         if (delivery.isWork()) return;
 
-        delivery.setWorkNext(null);
-        delivery.setWorkPrev(_workTail);
-
-        if (_workTail != null) {
-            _workTail.setWorkNext(delivery);
-        }
-
-        _workTail = delivery;
-
-        if (_workHead == null) {
-            _workHead = delivery;
-        }
+        deliveryWork.add(delivery);
 
         delivery.setWork(true);
     }
 
     public Iterator<Delivery> getWorkSequence()
     {
-        return new WorkSequence(_workHead);
+        return deliveryWork.iterator();
     }
 
     void setTransport(TransportImpl transport)
@@ -437,45 +415,6 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         return _transport;
     }
 
-    // TODO-now: remove now, use collections
-    private static class WorkSequence implements Iterator<Delivery>
-    {
-        private Delivery _next;
-
-        public WorkSequence(Delivery workHead)
-        {
-            _next = workHead;
-        }
-
-        @Override
-        public boolean hasNext()
-        {
-            return _next != null;
-        }
-
-        @Override
-        public void remove()
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Delivery next()
-        {
-            Delivery next = _next;
-            if(next != null)
-            {
-                _next = next.getWorkNext();
-            }
-            return next;
-        }
-    }
-
-    // TODO-now: use collections
-    Delivery getTransportWorkHead()
-    {
-        return _transportWorkHead;
-    }
 
     int getTransportWorkSize() {
         return _transportWorkSize;
@@ -486,29 +425,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     {
         if (!delivery.isTransportWork()) return;
 
-        Delivery next = delivery.getTransportWorkNext();
-        Delivery prev = delivery.getTransportWorkPrev();
-
-        if (prev != null) {
-            prev.setTransportWorkNext(next);
-        }
-
-        if (next != null) {
-            next.setTransportWorkPrev(prev);
-        }
-
-
-        if(_transportWorkHead == delivery)
-        {
-            _transportWorkHead = next;
-
-        }
-
-        if(_transportWorkTail == delivery)
-        {
-            _transportWorkTail = prev;
-        }
-
+        transportWork.remove(delivery);
         delivery.setTransportWork(false);
         _transportWorkSize--;
     }
@@ -519,18 +436,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         modified();
         if (delivery.isTransportWork()) return;
 
-        delivery.setTransportWorkNext(null);
-        delivery.setTransportWorkPrev(_transportWorkTail);
-
-        if (_transportWorkTail != null) {
-            _transportWorkTail.setTransportWorkNext(delivery);
-        }
-
-        _transportWorkTail = delivery;
-
-        if (_transportWorkHead == null) {
-            _transportWorkHead = delivery;
-        }
+        transportWork.add(delivery);
 
         delivery.setTransportWork(true);
         _transportWorkSize++;

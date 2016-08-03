@@ -55,8 +55,6 @@ import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 
-import org.apache.qpid.proton.amqp.Binary;
-
 public class MessengerImpl implements Messenger
 {
     private enum LinkCreditMode
@@ -758,9 +756,7 @@ public class MessengerImpl implements Messenger
             connection.open();
         }
 
-        Delivery delivery = connection.getWorkHead();
-        while (delivery != null)
-        {
+        for (Delivery delivery : connection.getTransportWork()) {
             Link link = delivery.getLink();
             if (delivery.isUpdated())
             {
@@ -776,10 +772,6 @@ public class MessengerImpl implements Messenger
             {
                 pumpIn( link.getSource().getAddress(), (Receiver)link );
             }
-
-            Delivery next = delivery.getWorkNext();
-            delivery.clear();
-            delivery = next;
         }
 
         for (Session session : connection.sessions(UNINIT, ANY))
@@ -1094,19 +1086,13 @@ public class MessengerImpl implements Messenger
             for (Connector<?> c : _driver.connectors())
             {
                 Connection connection = c.getConnection();
-                Delivery delivery = connection.getWorkHead();
-                while (delivery != null)
-                {
+                for (Delivery delivery : connection.getTransportWork()) {
                     if (delivery.isReadable() && !delivery.isPartial())
                     {
                         return true;
                     }
-                    else
-                    {
-                        delivery = delivery.getWorkNext();
-                    }
                 }
-            }
+           }
             // if no connections, or not listening, exit as there won't ever be a message
             if (!_driver.listeners().iterator().hasNext() && !_driver.connectors().iterator().hasNext())
                 return true;

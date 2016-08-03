@@ -20,6 +20,7 @@
  */
 package org.apache.qpid.proton.engine;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -174,5 +175,10 @@ public interface Connection extends Endpoint, ReactorChild
     Iterable<Session> sessions(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
 
     Iterable<Link> links(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
+
+    Collection<Delivery> getTransportWork();
+
+    Collection<Delivery> getDeliveryWork();
+
 
 }
