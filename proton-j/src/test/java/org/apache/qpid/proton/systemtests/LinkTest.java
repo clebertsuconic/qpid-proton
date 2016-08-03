@@ -87,7 +87,7 @@ public class LinkTest extends EngineTestBase
 
         pumpClientToServer();
 
-        getServer().session = getServer().connection.sessionHead(of(UNINITIALIZED), of(ACTIVE));
+        getServer().session = getServer().connection.sessions(of(UNINITIALIZED), of(ACTIVE)).iterator().next();
         assertEndpointState(getServer().session, UNINITIALIZED, ACTIVE);
 
         getServer().session.open();
@@ -123,7 +123,7 @@ public class LinkTest extends EngineTestBase
 
         LOGGER.fine(bold("======== About to set up implicitly created sender"));
 
-        getServer().sender = (Sender) getServer().connection.linkHead(of(UNINITIALIZED), of(ACTIVE));
+        getServer().sender = (Sender) getServer().connection.links(of(UNINITIALIZED), of(ACTIVE)).iterator().next();
 
         getServer().sender.setReceiverSettleMode(getServer().sender.getRemoteReceiverSettleMode());
         getServer().sender.setSenderSettleMode(getServer().sender.getRemoteSenderSettleMode());

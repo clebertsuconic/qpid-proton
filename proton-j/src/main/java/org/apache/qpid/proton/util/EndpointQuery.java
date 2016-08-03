@@ -25,7 +25,7 @@ import java.util.EnumSet;
 import org.apache.qpid.proton.engine.Endpoint;
 import org.apache.qpid.proton.engine.EndpointState;
 
-public class EndpointQuery<T extends Endpoint>
+public class EndpointQuery
 {
     private final EnumSet<EndpointState> _local;
     private final EnumSet<EndpointState> _remote;
@@ -36,7 +36,7 @@ public class EndpointQuery<T extends Endpoint>
         _remote = remote;
     }
 
-    public boolean matches(T node)
+    public boolean matches(Endpoint node)
     {
         return (_local == null || _local.contains(node.getLocalState()))
                 && (_remote == null || _remote.contains(node.getRemoteState()));

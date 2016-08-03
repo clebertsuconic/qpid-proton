@@ -56,8 +56,6 @@ public abstract class LinkImpl extends EndpointImpl implements Link
     private ReceiverSettleMode _receiverSettleMode;
     private ReceiverSettleMode _remoteReceiverSettleMode;
 
-
-    private LinkNode<Link> _node;
     private boolean _drain;
     private boolean _detached;
     private Map<Symbol, Object> _properties;
@@ -69,7 +67,7 @@ public abstract class LinkImpl extends EndpointImpl implements Link
         _session.incref();
         _name = name;
         Connection conn = session.getConnectionImpl();
-        _node = conn.addLinkEndpoint(this);
+        conn.addLinkEndpoint(this);
         conn.put(Event.Type.LINK_INIT, this);
     }
 
@@ -131,8 +129,7 @@ public abstract class LinkImpl extends EndpointImpl implements Link
             dlv = dlv.next();
         }
 
-        _session.getConnectionImpl().removeLinkEndpoint(_node);
-        _node = null;
+        _session.getConnectionImpl().removeLinkEndpoint(this);
     }
 
     public void modifyEndpoints() {
@@ -243,17 +240,6 @@ public abstract class LinkImpl extends EndpointImpl implements Link
     {
         // TODO - should be an error if local state is ACTIVE
         _target = target;
-    }
-
-    @Override
-    public Link next(EnumSet<EndpointState> local, EnumSet<EndpointState> remote)
-    {
-        LinkNode.Query<Link> query = new EndpointImplQuery(local, remote);
-
-        LinkNode<Link> linkNode = _node.next(query);
-
-        return linkNode == null ? null : linkNode.getValue();
-
     }
 
     abstract TransportLink getTransportLink();

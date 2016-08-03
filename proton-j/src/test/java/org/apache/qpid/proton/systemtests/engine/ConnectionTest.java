@@ -739,7 +739,7 @@ public class ConnectionTest
         clientSesion.open();
         _pumper.pumpAll();
 
-        Session serverSession = _serverConnection.sessionHead(of(UNINITIALIZED), of(ACTIVE));
+        Session serverSession = _serverConnection.sessions(of(UNINITIALIZED), of(ACTIVE)).iterator().next();
         serverSession.open();
         _pumper.pumpAll();
 

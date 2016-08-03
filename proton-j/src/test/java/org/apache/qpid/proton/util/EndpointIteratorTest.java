@@ -36,7 +36,7 @@ public class EndpointIteratorTest {
       implList.add(create(EndpointState.ACTIVE, EndpointState.ACTIVE));
       implList.add(create(EndpointState.ACTIVE, EndpointState.ACTIVE));
 
-      EndpointIterator<ConnectionImpl> iterator = new EndpointIterator(implList.iterator(), new EndpointQuery<>(EnumSet.of(EndpointState.CLOSED), EnumSet.of(EndpointState.CLOSED)));
+      EndpointIterator<ConnectionImpl> iterator = new EndpointIterator(implList.iterator(), new EndpointQuery(EnumSet.of(EndpointState.CLOSED), EnumSet.of(EndpointState.CLOSED)));
 
       int count = 0;
       while (iterator.hasNext()) {
@@ -59,7 +59,7 @@ public class EndpointIteratorTest {
       Assert.assertEquals(1, count);
 
       // this will go for anything
-      iterator = new EndpointIterator(implList.iterator(), new EndpointQuery<>(null, null));
+      iterator = new EndpointIterator(implList.iterator(), new EndpointQuery(null, null));
 
       count = 0;
       while (iterator.hasNext()) {

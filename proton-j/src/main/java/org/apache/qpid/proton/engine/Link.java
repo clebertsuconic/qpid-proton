@@ -130,13 +130,11 @@ public interface Link extends Endpoint
      */
     Target getRemoteTarget();
 
-    public Link next(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
+    int getCredit();
+    int getQueued();
+    int getUnsettled();
 
-    public int getCredit();
-    public int getQueued();
-    public int getUnsettled();
-
-    public Session getSession();
+    Session getSession();
 
     SenderSettleMode getSenderSettleMode();
 

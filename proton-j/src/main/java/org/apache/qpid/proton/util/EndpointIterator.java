@@ -24,10 +24,10 @@ import org.apache.qpid.proton.engine.Endpoint;
 public class EndpointIterator<T extends Endpoint> implements Iterator<T>{
 
    private final Iterator<T> delegatedIterator;
-   private final EndpointQuery<T> query;
+   private final EndpointQuery query;
    private T cachedNext;
 
-   public EndpointIterator(Iterator<T> delegatedIterator, EndpointQuery<T> query) {
+   public EndpointIterator(Iterator<T> delegatedIterator, EndpointQuery query) {
       this.delegatedIterator = delegatedIterator;
       this.query = query;
    }

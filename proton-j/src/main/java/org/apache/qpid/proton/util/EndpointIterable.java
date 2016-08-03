@@ -19,24 +19,22 @@ package org.apache.qpid.proton.util;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Spliterator;
-import java.util.function.Consumer;
 
 import org.apache.qpid.proton.engine.Endpoint;
 
 public class EndpointIterable<T extends Endpoint> implements Iterable<T> {
 
-   final EndpointQuery<T> query;
+   final EndpointQuery query;
    final Collection<T> collection;
 
-   public EndpointIterable(Collection<T> collection, EndpointQuery<T> query) {
+   public EndpointIterable(Collection<T> collection, EndpointQuery query) {
       this.query = query;
       this.collection = collection;
    }
 
    @Override
    public Iterator<T> iterator() {
-      return new EndpointIterator<>(collection.iterator(), query);
+      return new EndpointIterator<T>(collection.iterator(), query);
    }
 
 }

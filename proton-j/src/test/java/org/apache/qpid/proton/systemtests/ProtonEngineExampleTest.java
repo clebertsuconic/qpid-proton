@@ -101,7 +101,7 @@ public class ProtonEngineExampleTest extends EngineTestBase
 
         pumpClientToServer();
 
-        getServer().session = getServer().connection.sessionHead(of(UNINITIALIZED), of(ACTIVE));
+        getServer().session = getServer().connection.sessions(of(UNINITIALIZED), of(ACTIVE)).iterator().next();
         assertEndpointState(getServer().session, UNINITIALIZED, ACTIVE);
 
         getServer().session.open();
@@ -137,7 +137,7 @@ public class ProtonEngineExampleTest extends EngineTestBase
         // A real application would be interested in more states than simply ACTIVE, as there
         // exists the possibility that the link could have moved to another state already e.g. CLOSED.
         // (See pipelining).
-        getServer().receiver = (Receiver) getServer().connection.linkHead(of(UNINITIALIZED), of(ACTIVE));
+        getServer().receiver = (Receiver) getServer().connection.links(of(UNINITIALIZED), of(ACTIVE)).iterator().next();
         // Accept the settlement modes suggested by the client
         getServer().receiver.setSenderSettleMode(getServer().receiver.getRemoteSenderSettleMode());
         getServer().receiver.setReceiverSettleMode(getServer().receiver.getRemoteReceiverSettleMode());
@@ -246,7 +246,7 @@ public class ProtonEngineExampleTest extends EngineTestBase
 
         LOGGER.fine(bold("======== Server about to process client's link closure"));
 
-        assertSame(getServer().receiver, getServer().connection.linkHead(of(ACTIVE), of(CLOSED)));
+        assertSame(getServer().receiver, getServer().connection.links(of(ACTIVE), of(CLOSED)).iterator().next());
         getServer().receiver.close();
 
         pumpServerToClient();
@@ -259,7 +259,7 @@ public class ProtonEngineExampleTest extends EngineTestBase
 
         LOGGER.fine(bold("======== Server about to process client's session closure"));
 
-        assertSame(getServer().session, getServer().connection.sessionHead(of(ACTIVE), of(CLOSED)));
+        assertSame(getServer().session, getServer().connection.sessions(of(ACTIVE), of(CLOSED)).iterator().next());
         getServer().session.close();
 
         pumpServerToClient();
@@ -316,7 +316,7 @@ public class ProtonEngineExampleTest extends EngineTestBase
         getClient().session.close();
         pumpClientToServer();
 
-        getServer().session = getServer().connection.sessionHead(of(UNINITIALIZED), of(CLOSED));
+        getServer().session = getServer().connection.sessions(of(UNINITIALIZED), of(CLOSED)).iterator().next();
         assertEndpointState(getServer().session, UNINITIALIZED, CLOSED);
 
         getServer().session.open();

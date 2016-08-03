@@ -146,11 +146,10 @@ public interface Connection extends Endpoint, ReactorChild
     // Clebert: Added to abstract
     void removeModified(Endpoint endpoint);
 
-    // Clebert: Added to abstract
-    LinkNode<Link> addLinkEndpoint(Link endpoint);
+    void addLinkEndpoint(Link endpoint);
 
     // Clebert: Added to abstract
-    void removeLinkEndpoint(LinkNode<Link> node);
+    void removeLinkEndpoint(Link endpoint);
 
     // TODO-now: collection candidate
     void removeTransportWork(Delivery delivery);
@@ -173,5 +172,7 @@ public interface Connection extends Endpoint, ReactorChild
     void freeSession(Session session);
 
     Iterable<Session> sessions(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
+
+    Iterable<Link> links(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
 
 }

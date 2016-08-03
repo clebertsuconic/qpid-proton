@@ -51,10 +51,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
 
 
     private final LinkedHashSet<Session> sessions = new LinkedHashSet<>();
-
-    // TODO-now: use Collections here
-    private LinkNode<Link> _linkHead;
-    private LinkNode<Link> _linkTail;
+    private final LinkedHashSet<Link> links = new LinkedHashSet<>();
 
 
     // TODO-now: use Collections here
@@ -106,6 +103,23 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         return new EndpointIterable<>(sessions, new EndpointQuery(local, remote));
     }
 
+    public Iterable<Link> links(EnumSet<EndpointState> local, EnumSet<EndpointState> remote) {
+        return new EndpointIterable<>(links, new EndpointQuery(local, remote));
+    }
+
+    @Override
+    public Session sessionHead(final EnumSet<EndpointState> local, final EnumSet<EndpointState> remote)
+    {
+        return sessions(local, remote).iterator().next();
+    }
+
+    @Override
+    public Link linkHead(EnumSet<EndpointState> local, EnumSet<EndpointState> remote)
+    {
+        return links(local, remote).iterator().next();
+    }
+
+
     public void freeSession(Session session)
     {
         removeSessionEndpoint(session);
@@ -118,62 +132,14 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     }
 
 
-    public LinkNode<Link> addLinkEndpoint(Link endpoint)
+    public void addLinkEndpoint(Link endpoint)
     {
-        LinkNode<Link> node;
-        if(_linkHead == null)
-        {
-            node = _linkHead = _linkTail = LinkNode.newList(endpoint);
-        }
-        else
-        {
-            node = _linkTail = _linkTail.addAtTail(endpoint);
-        }
-        return node;
+        links.add(endpoint);
     }
 
-    public void removeLinkEndpoint(LinkNode<Link> node)
+    public void removeLinkEndpoint(Link node)
     {
-        LinkNode<Link> prev = node.getPrev();
-        LinkNode<Link> next = node.getNext();
-
-        if(_linkHead == node)
-        {
-            _linkHead = next;
-        }
-        if(_linkTail == node)
-        {
-            _linkTail = prev;
-        }
-        node.remove();
-    }
-
-
-    @Override
-    public Session sessionHead(final EnumSet<EndpointState> local, final EnumSet<EndpointState> remote)
-    {
-        EndpointQuery<Session> query = new EndpointQuery(local, remote);
-        for (Session session : sessions) {
-            if (query.matches(session)) {
-                return session;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Link linkHead(EnumSet<EndpointState> local, EnumSet<EndpointState> remote)
-    {
-        if(_linkHead == null)
-        {
-            return null;
-        }
-        else
-        {
-            LinkNode.Query<Link> query = new EndpointImplQuery(local, remote);
-            LinkNode<Link> node = query.matches(_linkHead) ? _linkHead : _linkHead.next(query);
-            return node == null ? null : node.getValue();
-        }
+        links.remove(node);
     }
 
     @Override
@@ -611,10 +577,8 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
             put(Event.Type.SESSION_INIT, session);
         }
 
-        LinkNode<Link> lnk = _linkHead;
-        while (lnk != null) {
-            put(Event.Type.LINK_INIT, lnk.getValue());
-            lnk = lnk.getNext();
+        for (Link lnk : links) {
+            put(Event.Type.LINK_INIT, lnk);
         }
     }
 

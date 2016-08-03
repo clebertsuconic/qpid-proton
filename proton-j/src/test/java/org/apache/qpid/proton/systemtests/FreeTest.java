@@ -77,13 +77,13 @@ public class FreeTest extends EngineTestBase
 
         pumpClientToServer();
 
-        getServer().session = getServer().connection.sessionHead(of(UNINITIALIZED), of(ACTIVE));
+        getServer().session = getServer().connection.sessions(of(UNINITIALIZED), of(ACTIVE)).iterator().next();
         assertEndpointState(getServer().session, UNINITIALIZED, ACTIVE);
 
         getServer().session.open();
         assertEndpointState(getServer().session, ACTIVE, ACTIVE);
 
-        Session serverSession2 = getServer().connection.sessionHead(of(UNINITIALIZED), of(ACTIVE));
+        Session serverSession2 = getServer().connection.sessions(of(UNINITIALIZED), of(ACTIVE)).iterator().next();
         assertNotNull("Engine did not return expected second server session", serverSession2);
         assertNotSame("Engine did not return expected second server session", serverSession2, getServer().session);
         serverSession2.open();
@@ -132,7 +132,7 @@ public class FreeTest extends EngineTestBase
 
         LOGGER.fine(bold("======== About to set up server receivers"));
 
-        getServer().receiver = (Receiver) getServer().connection.linkHead(of(UNINITIALIZED), of(ACTIVE));
+        getServer().receiver = (Receiver) getServer().connection.links(of(UNINITIALIZED), of(ACTIVE)).iterator().next();
         // Accept the settlement modes suggested by the client
         getServer().receiver.setSenderSettleMode(getServer().receiver.getRemoteSenderSettleMode());
         getServer().receiver.setReceiverSettleMode(getServer().receiver.getRemoteReceiverSettleMode());
@@ -147,7 +147,7 @@ public class FreeTest extends EngineTestBase
 
         assertEndpointState(getServer().receiver, ACTIVE, ACTIVE);
 
-        Receiver serverReceiver2 = (Receiver) getServer().connection.linkHead(of(UNINITIALIZED), of(ACTIVE));
+        Receiver serverReceiver2 = (Receiver) getServer().connection.links(of(UNINITIALIZED), of(ACTIVE)).iterator().next();
         serverReceiver2.open();
         assertEndpointState(serverReceiver2, ACTIVE, ACTIVE);
 
@@ -199,7 +199,7 @@ public class FreeTest extends EngineTestBase
 
         LOGGER.fine(bold("======== About to set up server senders"));
 
-        getServer().sender = (Sender) getServer().connection.linkHead(of(UNINITIALIZED), of(ACTIVE));
+        getServer().sender = (Sender) getServer().connection.links(of(UNINITIALIZED), of(ACTIVE)).iterator().next();
         // Accept the settlement modes suggested by the client
         getServer().sender.setSenderSettleMode(getServer().sender.getRemoteSenderSettleMode());
         getServer().sender.setReceiverSettleMode(getServer().sender.getRemoteReceiverSettleMode());
@@ -213,7 +213,7 @@ public class FreeTest extends EngineTestBase
         getServer().sender.open();
         assertEndpointState(getServer().sender, ACTIVE, ACTIVE);
 
-        Sender serverSender2 = (Sender) getServer().connection.linkHead(of(UNINITIALIZED), of(ACTIVE));
+        Sender serverSender2 = (Sender) getServer().connection.links(of(UNINITIALIZED), of(ACTIVE)).iterator().next();
 
         serverRemoteTarget2 = serverSender2.getRemoteTarget();
         assertTerminusEquals(tgt2, serverRemoteTarget2);

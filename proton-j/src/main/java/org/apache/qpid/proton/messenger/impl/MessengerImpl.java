@@ -651,7 +651,7 @@ public class MessengerImpl implements Messenger
             for (Connector<?> c : _driver.connectors())
             {
                 Connection connection = c.getConnection();
-                for (Link link : new Links(connection, ACTIVE, ANY))
+                for (Link link : connection.links(ACTIVE, ANY))
                 {
                     if (outgoing)
                     {
@@ -787,7 +787,7 @@ public class MessengerImpl implements Messenger
             session.open();
             _logger.log(Level.FINE, "Opened session " + session);
         }
-        for (Link link : new Links(connection, UNINIT, ANY))
+        for (Link link : connection.links(UNINIT, ANY))
         {
             //TODO: the following is not correct; should only copy those properties that we understand
             //TODO: is this any better:
@@ -804,7 +804,7 @@ public class MessengerImpl implements Messenger
 
         distributeCredit();
 
-        for (Link link : new Links(connection, ACTIVE, ACTIVE))
+        for (Link link : connection.links(ACTIVE, ACTIVE))
         {
             if (link instanceof Sender)
             {
@@ -817,7 +817,7 @@ public class MessengerImpl implements Messenger
             session.close();
         }
 
-        for (Link link : new Links(connection, ANY, CLOSED))
+        for (Link link : connection.links(ANY, CLOSED))
         {
             if (link.getLocalState() == EndpointState.ACTIVE)
             {
@@ -918,7 +918,7 @@ public class MessengerImpl implements Messenger
 
     private void reclaimCredit(Connection connection)
     {
-        for (Link link : new Links(connection, ANY, ANY))
+        for (Link link : connection.links(ANY, ANY))
         {
             reclaimLink(link);
         }
@@ -1053,7 +1053,7 @@ public class MessengerImpl implements Messenger
                 // }
 
                 Connection connection = c.getConnection();
-                for (Link link : new Links(connection, ACTIVE, ANY))
+                for (Link link : connection.links(ACTIVE, ANY))
                 {
                     if (link instanceof Sender)
                     {
@@ -1274,7 +1274,7 @@ public class MessengerImpl implements Messenger
             connection.open();
         }
 
-        for (Link link : new Links(connection, ACTIVE, ANY))
+        for (Link link : connection.links(ACTIVE, ANY))
         {
             C result = finder.test(link);
             if (result != null) return result;
@@ -1285,61 +1285,6 @@ public class MessengerImpl implements Messenger
         linkAdded(link);
         link.open();
         return link;
-    }
-
-    private static class Links implements Iterable<Link>
-    {
-        private final Connection _connection;
-        private final EnumSet<EndpointState> _local;
-        private final EnumSet<EndpointState> _remote;
-
-        Links(Connection connection, EnumSet<EndpointState> local, EnumSet<EndpointState> remote)
-        {
-            _connection = connection;
-            _local = local;
-            _remote = remote;
-        }
-
-        public java.util.Iterator<Link> iterator()
-        {
-            return new LinkIterator(_connection, _local, _remote);
-        }
-    }
-
-    private static class LinkIterator implements java.util.Iterator<Link>
-    {
-        private final EnumSet<EndpointState> _local;
-        private final EnumSet<EndpointState> _remote;
-        private Link _next;
-
-        LinkIterator(Connection connection, EnumSet<EndpointState> local, EnumSet<EndpointState> remote)
-        {
-            _local = local;
-            _remote = remote;
-            _next = connection.linkHead(_local, _remote);
-        }
-
-        public boolean hasNext()
-        {
-            return _next != null;
-        }
-
-        public Link next()
-        {
-            try
-            {
-                return _next;
-            }
-            finally
-            {
-                _next = _next.next(_local, _remote);
-            }
-        }
-
-        public void remove()
-        {
-            throw new UnsupportedOperationException();
-        }
     }
 
     private void adjustReplyTo(Message m)
