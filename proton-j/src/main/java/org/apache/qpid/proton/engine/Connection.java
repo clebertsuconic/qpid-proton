@@ -170,13 +170,8 @@ public interface Connection extends Endpoint, ReactorChild
     // TODO-now: remove this, use iterator
     Iterator<Delivery> getWorkSequence();
 
-    // TODO-now: Maybe some other internal abstract class
     void freeSession(Session session);
 
-    // TODO-now: remove this by regular collections
-    void removeSessionEndpoint(LinkNode<Session> node);
-
-    // TODO-now: remove this by regular collections
-    LinkNode<Session> addSessionEndpoint(Session endpoint);
+    Iterable<Session> sessions(EnumSet<EndpointState> local, EnumSet<EndpointState> remote);
 
 }

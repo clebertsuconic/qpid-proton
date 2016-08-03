@@ -782,7 +782,7 @@ public class MessengerImpl implements Messenger
             delivery = next;
         }
 
-        for (Session session : new Sessions(connection, UNINIT, ANY))
+        for (Session session : connection.sessions(UNINIT, ANY))
         {
             session.open();
             _logger.log(Level.FINE, "Opened session " + session);
@@ -812,7 +812,7 @@ public class MessengerImpl implements Messenger
             }
         }
 
-        for (Session session : new Sessions(connection, ACTIVE, CLOSED))
+        for (Session session : connection.sessions(ACTIVE, CLOSED))
         {
             session.close();
         }
@@ -1325,61 +1325,6 @@ public class MessengerImpl implements Messenger
         }
 
         public Link next()
-        {
-            try
-            {
-                return _next;
-            }
-            finally
-            {
-                _next = _next.next(_local, _remote);
-            }
-        }
-
-        public void remove()
-        {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    private static class Sessions implements Iterable<Session>
-    {
-        private final Connection _connection;
-        private final EnumSet<EndpointState> _local;
-        private final EnumSet<EndpointState> _remote;
-
-        Sessions(Connection connection, EnumSet<EndpointState> local, EnumSet<EndpointState> remote)
-        {
-            _connection = connection;
-            _local = local;
-            _remote = remote;
-        }
-
-        public java.util.Iterator<Session> iterator()
-        {
-            return new SessionIterator(_connection, _local, _remote);
-        }
-    }
-
-    private static class SessionIterator implements java.util.Iterator<Session>
-    {
-        private final EnumSet<EndpointState> _local;
-        private final EnumSet<EndpointState> _remote;
-        private Session _next;
-
-        SessionIterator(Connection connection, EnumSet<EndpointState> local, EnumSet<EndpointState> remote)
-        {
-            _local = local;
-            _remote = remote;
-            _next = connection.sessionHead(_local, _remote);
-        }
-
-        public boolean hasNext()
-        {
-            return _next != null;
-        }
-
-        public Session next()
         {
             try
             {

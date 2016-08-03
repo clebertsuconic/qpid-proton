@@ -50,14 +50,11 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     private int _outgoingDeliveries = 0;
     private long _outgoingWindow = Integer.MAX_VALUE;
 
-    private LinkNode<Session> _node;
-
 
     SessionImpl(Connection connection)
     {
         _connection = connection;
         _connection.incref();
-        _node = _connection.addSessionEndpoint(this);
         _connection.put(Event.Type.SESSION_INIT, this);
     }
 
@@ -108,16 +105,6 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     }
 
     @Override
-    public Session next(EnumSet<EndpointState> local, EnumSet<EndpointState> remote)
-    {
-        LinkNode.Query<Session> query = new EndpointImplQuery(local, remote);
-
-        LinkNode<Session> sessionNode = _node.next(query);
-
-        return sessionNode == null ? null : sessionNode.getValue();
-    }
-
-    @Override
     protected Connection getConnectionImpl()
     {
         return _connection;
@@ -138,8 +125,6 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     @Override
     void doFree() {
         _connection.freeSession(this);
-        _connection.removeSessionEndpoint(_node);
-        _node = null;
 
         List<Sender> senders = new ArrayList<Sender>(_senders.values());
         for(Sender sender : senders) {
@@ -178,11 +163,6 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
     void setTransportSession(TransportSession transportSession)
     {
         _transportSession = transportSession;
-    }
-
-    void setNode(LinkNode<Session> node)
-    {
-        _node = node;
     }
 
     void freeSender(SenderImpl sender)

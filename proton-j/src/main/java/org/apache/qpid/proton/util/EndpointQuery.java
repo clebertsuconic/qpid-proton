@@ -1,3 +1,4 @@
+package org.apache.qpid.proton.util;
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -17,45 +18,27 @@
  * specific language governing permissions and limitations
  * under the License.
  *
- */
-package org.apache.qpid.proton.engine;
+*/
 
 import java.util.EnumSet;
 
+import org.apache.qpid.proton.engine.Endpoint;
+import org.apache.qpid.proton.engine.EndpointState;
 
-/**
- * Session
- *
- * Note that session level flow control is handled internally by Proton.
- */
-public interface Session extends Endpoint
+public class EndpointQuery<T extends Endpoint>
 {
-    /**
-     * Returns a newly created sender endpoint
-     */
-    Sender sender(String name);
+    private final EnumSet<EndpointState> _local;
+    private final EnumSet<EndpointState> _remote;
 
-    /**
-     * Returns a newly created receiver endpoint
-     */
-    Receiver receiver(String name);
+    public EndpointQuery(EnumSet<EndpointState> local, EnumSet<EndpointState> remote)
+    {
+        _local = local;
+        _remote = remote;
+    }
 
-    Connection getConnection();
-
-    int getIncomingCapacity();
-
-    void setIncomingCapacity(int bytes);
-
-    int getIncomingBytes();
-
-    int getOutgoingBytes();
-
-    long getOutgoingWindow();
-
-    /**
-     * Sets the outgoing window size.
-     *
-     * @param outgoingWindowSize the outgoing window size
-     */
-    void setOutgoingWindow(long outgoingWindowSize);
+    public boolean matches(T node)
+    {
+        return (_local == null || _local.contains(node.getLocalState()))
+                && (_remote == null || _remote.contains(node.getRemoteState()));
+    }
 }

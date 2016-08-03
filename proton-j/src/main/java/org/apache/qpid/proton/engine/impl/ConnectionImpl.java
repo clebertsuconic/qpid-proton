@@ -23,6 +23,7 @@ package org.apache.qpid.proton.engine.impl;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -36,22 +37,20 @@ import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.ProtonJConnection;
 import org.apache.qpid.proton.engine.Session;
-import org.apache.qpid.proton.engine.Transport;
-import org.apache.qpid.proton.machine.BareConnection;
 import org.apache.qpid.proton.reactor.Reactor;
+import org.apache.qpid.proton.util.EndpointIterable;
+import org.apache.qpid.proton.util.EndpointQuery;
 
 public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
 {
     public static final int MAX_CHANNELS = 65535;
 
-    private List<Session> _sessions = new ArrayList<>();
     private Endpoint _transportTail;
     private Endpoint _transportHead;
     private int _maxChannels = MAX_CHANNELS;
 
-    // TODO-now: use Collections here
-    private LinkNode<Session> _sessionHead;
-    private LinkNode<Session> _sessionTail;
+
+    private final LinkedHashSet<Session> sessions = new LinkedHashSet<>();
 
     // TODO-now: use Collections here
     private LinkNode<Link> _linkHead;
@@ -98,46 +97,24 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     public SessionImpl session()
     {
         SessionImpl session = new SessionImpl(this);
-        _sessions.add(session);
-
+        sessions.add(session);
 
         return session;
     }
 
+    public Iterable<Session> sessions(EnumSet<EndpointState> local, EnumSet<EndpointState> remote) {
+        return new EndpointIterable<>(sessions, new EndpointQuery(local, remote));
+    }
+
     public void freeSession(Session session)
     {
-        _sessions.remove(session);
+        removeSessionEndpoint(session);
     }
 
-    public LinkNode<Session> addSessionEndpoint(Session endpoint)
+    // TODO-now: Remove this by regular collections
+    public void removeSessionEndpoint(Session session)
     {
-        LinkNode<Session> node;
-        if(_sessionHead == null)
-        {
-            node = _sessionHead = _sessionTail = LinkNode.newList(endpoint);
-        }
-        else
-        {
-            node = _sessionTail = _sessionTail.addAtTail(endpoint);
-        }
-        return node;
-    }
-
-    // TODO-now: Remove this by regular connections
-    public void removeSessionEndpoint(LinkNode<Session> node)
-    {
-        LinkNode<Session> prev = node.getPrev();
-        LinkNode<Session> next = node.getNext();
-
-        if(_sessionHead == node)
-        {
-            _sessionHead = next;
-        }
-        if(_sessionTail == node)
-        {
-            _sessionTail = prev;
-        }
-        node.remove();
+        sessions.remove(session);
     }
 
 
@@ -175,16 +152,13 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     @Override
     public Session sessionHead(final EnumSet<EndpointState> local, final EnumSet<EndpointState> remote)
     {
-        if(_sessionHead == null)
-        {
-            return null;
+        EndpointQuery<Session> query = new EndpointQuery(local, remote);
+        for (Session session : sessions) {
+            if (query.matches(session)) {
+                return session;
+            }
         }
-        else
-        {
-            LinkNode.Query<Session> query = new EndpointImplQuery(local, remote);
-            LinkNode<Session> node = query.matches(_sessionHead) ? _sessionHead : _sessionHead.next(query);
-            return node == null ? null : node.getValue();
-        }
+        return null;
     }
 
     @Override
@@ -215,18 +189,16 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
 
     @Override
     void doFree() {
-        List<Session> sessions = new ArrayList<>(_sessions);
+        List<Session> sessions = new ArrayList(this.sessions);
         for(Session session : sessions) {
             session.free();
         }
-        _sessions = null;
+        this.sessions.clear();
     }
 
     public void modifyEndpoints() {
-        if (_sessions != null) {
-            for (Session ssn: _sessions) {
-                ssn.modifyEndpoints();
-            }
+        for (Session ssn: sessions) {
+            ssn.modifyEndpoints();
         }
         if (!freed) {
             modified();
@@ -431,11 +403,6 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
         _remoteHostname = remoteHostname;
     }
 
-    // TODO-now: remove this. collection usage
-    Delivery getWorkTail()
-    {
-        return _workTail;
-    }
 
     public void removeWork(Delivery delivery)
     {
@@ -640,10 +607,8 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
 
         put(Event.Type.CONNECTION_INIT, this);
 
-        LinkNode<Session> ssn = _sessionHead;
-        while (ssn != null) {
-            put(Event.Type.SESSION_INIT, ssn.getValue());
-            ssn = ssn.getNext();
+        for (Session session: sessions) {
+            put(Event.Type.SESSION_INIT, session);
         }
 
         LinkNode<Link> lnk = _linkHead;
