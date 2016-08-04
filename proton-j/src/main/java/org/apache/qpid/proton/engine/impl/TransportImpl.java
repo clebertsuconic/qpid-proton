@@ -733,7 +733,7 @@ public class TransportImpl extends EndpointImpl
 
             while(endpoint != null)
             {
-                if(endpoint instanceof LinkImpl)
+                if(endpoint instanceof Link)
                 {
 
                     LinkImpl link = (LinkImpl) endpoint;

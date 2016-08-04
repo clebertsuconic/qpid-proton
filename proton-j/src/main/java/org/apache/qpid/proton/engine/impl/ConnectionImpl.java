@@ -37,6 +37,7 @@ import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.ProtonJConnection;
 import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.reactor.Reactor;
 import org.apache.qpid.proton.util.EndpointIterable;
 import org.apache.qpid.proton.util.EndpointQuery;
@@ -62,7 +63,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     private Delivery _transportWorkHead;
     private Delivery _transportWorkTail;
 
-    private TransportImpl _transport;
+    private Transport _transport;
 
     private int _transportWorkSize = 0;
     private String _localContainerId = "";
@@ -432,7 +433,7 @@ public class ConnectionImpl extends EndpointImpl implements ProtonJConnection
     }
 
     @Override
-    public TransportImpl getTransport()
+    public Transport getTransport()
     {
         return _transport;
     }

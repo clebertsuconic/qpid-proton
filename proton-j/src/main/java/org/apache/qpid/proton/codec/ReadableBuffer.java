@@ -33,13 +33,13 @@ import java.nio.charset.CharsetDecoder;
 public interface ReadableBuffer
 {
 
-    void put(ReadableBuffer other);
-
     byte get();
 
     int getInt();
 
     long getLong();
+
+    int getUnsignedShort();
 
     short getShort();
 
@@ -69,9 +69,6 @@ public interface ReadableBuffer
 
     ReadableBuffer duplicate();
 
-    ByteBuffer byteBuffer();
-
-
 
     String readUTF8();
 
@@ -99,6 +96,10 @@ public interface ReadableBuffer
         public int getInt()
         {
             return buffer.getInt();
+        }
+
+        public int getUnsignedShort() {
+            return buffer.getShort();
         }
 
         @Override
@@ -197,12 +198,6 @@ public interface ReadableBuffer
             return new ByteBufferReader(buffer.duplicate());
         }
 
-        @Override
-        public ByteBuffer byteBuffer()
-        {
-            return buffer;
-        }
-
      // IN our tests on HornetQ this is pretty bad performance wise
         private static final Charset Charset_UTF8 = Charset.forName("UTF-8");
 
@@ -227,11 +222,11 @@ public interface ReadableBuffer
             CharBuffer charBuf = Charset_UTF8.decode(buffer);
             return charBuf.toString();
         }
-
-        public void put(ReadableBuffer other)
-        {
-            this.buffer.put(other.byteBuffer());
-        }
+//
+//        public void put(ReadableBuffer other)
+//        {
+//            this.buffer.put(other.byteBuffer());
+//        }
     }
 
 
