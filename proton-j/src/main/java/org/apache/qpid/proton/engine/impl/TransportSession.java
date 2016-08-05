@@ -32,13 +32,15 @@ import org.apache.qpid.proton.amqp.transport.Role;
 import org.apache.qpid.proton.amqp.transport.Transfer;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Event;
+import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.engine.Transport;
 
 class TransportSession
 {
     private static final int HANDLE_MAX = 65535;
 
-    private final TransportImpl _transport;
-    private final SessionImpl _session;
+    private final Transport _transport;
+    private final Session _session;
     private int _localChannel = -1;
     private int _remoteChannel = -1;
     private boolean _openSent;
@@ -70,7 +72,7 @@ class TransportSession
     private boolean _endReceived;
     private boolean _beginSent;
 
-    TransportSession(TransportImpl transport, SessionImpl session)
+    TransportSession(Transport transport, Session session)
     {
         _transport = transport;
         _session = session;
@@ -83,7 +85,7 @@ class TransportSession
         unsetRemoteChannel();
     }
 
-    public SessionImpl getSession()
+    public Session getSession()
     {
         return _session;
     }

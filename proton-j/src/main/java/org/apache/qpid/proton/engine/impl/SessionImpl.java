@@ -211,7 +211,7 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
         return _incomingBytes;
     }
 
-    void incrementIncomingBytes(int delta)
+    public void incrementIncomingBytes(int delta)
     {
         _incomingBytes += delta;
     }
@@ -222,12 +222,12 @@ public class SessionImpl extends EndpointImpl implements ProtonJSession
         return _outgoingBytes;
     }
 
-    void incrementOutgoingBytes(int delta)
+    public void incrementOutgoingBytes(int delta)
     {
         _outgoingBytes += delta;
     }
 
-    void incrementIncomingDeliveries(int delta)
+    public void incrementIncomingDeliveries(int delta)
     {
         _incomingDeliveries += delta;
     }

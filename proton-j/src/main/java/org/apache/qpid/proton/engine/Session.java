@@ -58,4 +58,12 @@ public interface Session extends Endpoint
      * @param outgoingWindowSize the outgoing window size
      */
     void setOutgoingWindow(long outgoingWindowSize);
+
+
+    void incrementOutgoingBytes(int delta);
+
+    void incrementIncomingDeliveries(int delta);
+
+    void incrementIncomingBytes(int delta);
+
 }
