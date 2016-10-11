@@ -32,6 +32,7 @@ import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.UnsignedShort;
 
 import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 public class DecoderImpl implements ByteBufferDecoder
@@ -44,6 +45,30 @@ public class DecoderImpl implements ByteBufferDecoder
 
     public DecoderImpl()
     {
+    }
+
+   /**
+    * This is for API compatibility, however the user here is @Deprecated.
+    *
+    */
+   ReadableBuffer _buffer;
+
+
+    /**
+     * Decoders now are stateless. Pass the buffer on each method. ß
+     * @deprecated*/
+    @Deprecated
+    public void setByteBuffer(final ByteBuffer buffer)
+    {
+        _buffer = new ReadableBuffer.ByteBufferReader(buffer);
+    }
+
+   /**
+    * Use: {@link #readConstructor(ReadableBuffer)}
+    * @return
+    */
+    public TypeConstructor readConstructor() {
+        return readConstructor(_buffer);
     }
 
     public TypeConstructor readConstructor(ReadableBuffer buffer)
@@ -120,10 +145,34 @@ public class DecoderImpl implements ByteBufferDecoder
                                       + clazz.getName() +".");
     }
 
+    /**
+     * Use: {@link #readBoolean()} (ReadableBuffer)}
+     * @return
+     */
+    @Deprecated
+    public Boolean readBoolean() {
+        return readBoolean(_buffer);
+    }
+
 
     public Boolean readBoolean(final ReadableBuffer buffer)
     {
         return readBoolean(buffer, null);
+    }
+
+    /**
+     * Use: {@link #readBoolean(ReadableBuffer, Boolean)}
+     * @return
+     */
+    @Deprecated
+    public Boolean readBoolean(final Boolean defaultVal) {
+        return readBoolean(_buffer, defaultVal);
+
+    }
+
+    @Deprecated
+    public Boolean readBoolean(final Boolean defaultVal) {
+        return readBoolean(_buffer, defaultVal);
     }
 
     public Boolean readBoolean(final ReadableBuffer buffer, final Boolean defaultVal)
@@ -140,6 +189,12 @@ public class DecoderImpl implements ByteBufferDecoder
         }
         throw unexpectedType(val, Boolean.class);
     }
+
+    @Deprecated
+    public Boolean readBoolean(final boolean defaultVal) {
+        return readBoolean(_buffer, defaultVal);
+    }
+
 
     public boolean readBoolean(ReadableBuffer buffer, final boolean defaultVal)
     {
@@ -162,9 +217,20 @@ public class DecoderImpl implements ByteBufferDecoder
         }
     }
 
+    @Deprecated
+    public Byte readByte()
+    {
+        return readByte(_buffer);
+    }
+
     public Byte readByte(ReadableBuffer buffer)
     {
         return readByte(buffer, null);
+    }
+
+    @Deprecated
+    public Byte readByte(final Byte defaultVal) {
+        return readByte(_buffer, defaultVal);
     }
 
     public Byte readByte(ReadableBuffer buffer, final Byte defaultVal)
@@ -180,6 +246,12 @@ public class DecoderImpl implements ByteBufferDecoder
             return (Byte) val;
         }
         throw unexpectedType(val, Byte.class);
+    }
+
+    @Deprecated
+    public byte readByte(final byte defaultVal)
+    {
+        return readByte(_buffer, defaultVal);
     }
 
     public byte readByte(ReadableBuffer buffer, final byte defaultVal)
@@ -203,9 +275,19 @@ public class DecoderImpl implements ByteBufferDecoder
         }
     }
 
+    @Deprecated
+    public Short readShort() {
+        return readShort(_buffer);
+    }
+
     public Short readShort(ReadableBuffer buffer)
     {
         return readShort(buffer, null);
+    }
+
+    @Deprecated
+    public Short readShort(final Short defaultVal) {
+        return readShort(_buffer, defaultVal);
     }
 
     public Short readShort(ReadableBuffer buffer, final Short defaultVal)
@@ -222,6 +304,11 @@ public class DecoderImpl implements ByteBufferDecoder
         }
         throw unexpectedType(val, Short.class);
 
+    }
+
+    @Deprecated
+    public short readShort(final short defaultVal) {
+        return readShort(_buffer, defaultVal);
     }
 
     public short readShort(ReadableBuffer buffer, final short defaultVal)
@@ -246,9 +333,20 @@ public class DecoderImpl implements ByteBufferDecoder
         }
     }
 
+    @Deprecated
+    public Integer readInteger() {
+        return readInteger(_buffer);
+    }
+
     public Integer readInteger(ReadableBuffer buffer)
     {
         return readInteger(buffer, null);
+    }
+
+
+    @Deprecated
+    public Integer readInteger(final Integer defaultVal) {
+        return readInteger(_buffer, defaultVal);
     }
 
     public Integer readInteger(ReadableBuffer buffer, final Integer defaultVal)
@@ -265,6 +363,11 @@ public class DecoderImpl implements ByteBufferDecoder
         }
         throw unexpectedType(val, Integer.class);
 
+    }
+
+    @Deprecated
+    public int readInteger(final int defaultVal) {
+        return readInteger(_buffer, defaultVal);
     }
 
     public int readInteger(ReadableBuffer buffer, final int defaultVal)
@@ -289,9 +392,19 @@ public class DecoderImpl implements ByteBufferDecoder
         }
     }
 
+    @Deprecated
+    public Long readLong() {
+        return readLong(_buffer);
+    }
+
     public Long readLong(ReadableBuffer buffer)
     {
         return readLong(buffer, null);
+    }
+
+    @Deprecated
+    public Long readLong(final Long defaultVal) {
+        return readLong(_buffer, defaultVal);
     }
 
     public Long readLong(ReadableBuffer buffer, final Long defaultVal)
@@ -309,6 +422,11 @@ public class DecoderImpl implements ByteBufferDecoder
         }
         throw unexpectedType(val, Long.class);
 
+    }
+
+    @Deprecated
+    public long readLong(final long defaultVal) {
+        return readLong(_buffer, defaultVal);
     }
 
     public long readLong(ReadableBuffer buffer, final long defaultVal)
@@ -331,6 +449,10 @@ public class DecoderImpl implements ByteBufferDecoder
                 throw unexpectedType(val, Long.class);
             }
         }
+    }
+
+    public UnsignedByte readUnsignedByte() {
+        return readUnsignedByte(_buffer);
     }
 
     public UnsignedByte readUnsignedByte(ReadableBuffer buffer)
